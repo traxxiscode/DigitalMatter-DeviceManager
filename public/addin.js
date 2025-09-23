@@ -484,6 +484,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
         try {
             // Step 1: Load Digital Matter devices (now filtered by client)
             await loadDigitalMatterDevices();
+
+            console.log('Devices have been loaded')
             
             if (digitalMatterDevices.length === 0) {
                 showEmptyState();
@@ -492,6 +494,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
             // Step 2: Get Geotab serials (only for filtered devices)
             await enrichWithGeotabSerials();
+
+            console.log('Geotab Serials have been loaded')
             
             // Step 3: Load Geotab devices and enrich (renamed function)
             await loadAndEnrichWithGeotabData();
@@ -505,15 +509,23 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
             digitalMatterDevices = devicesWithGeotabMatch;
             showAlert(`Final count: ${digitalMatterDevices.length} matched devices`, 'success');
+
+            console.log('Geotab data has been loaded and filtered')
             
             // Step 4: Get battery data
             await enrichWithBatteryData();
+
+            console.log('Battery data has been loaded')
             
             // Step 5: Get system parameters
             await enrichWithSystemParameters();
+
+            console.log('System parameters have been loaded')
             
             // Step 6: Get recovery mode queues
             await enrichWithRecoveryModeQueues();
+
+            console.log('Recovery mode queues have been loaded')
             
             // Step 7: Render devices
             filteredDevices = [...digitalMatterDevices];
