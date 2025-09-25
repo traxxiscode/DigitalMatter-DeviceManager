@@ -100,7 +100,6 @@ geotab.addin.digitalMatterDeviceManager = function () {
         description: 'Control how trips are detected and when uploads happen.',
         params: {
             'fPeriodicOnly': 'Heartbeat Only - Disable movement tracking so the device only sends periodic check-ins.',
-            'fJostleTrips': 'Accelerometer Trips - Use motion detection instead of GPS movement to detect trips.',
             'fUploadOnStart': 'Upload at Trip Start - Sends data immediately when a trip begins.',
             'fUploadDuring': 'Upload During Trip - Sends updates while moving (uses the In-Trip Upload setting). ⚠️ Increases battery use.',
             'fUploadOnEnd': 'Upload at Trip End - Sends data immediately after the trip finishes.'
@@ -183,6 +182,65 @@ geotab.addin.digitalMatterDeviceManager = function () {
             name: 'Custom',
             description: 'Configure each parameter individually',
             settings: {}
+        }
+    };
+
+    // Default parameters for devices when systemParameters are missing
+    const DEFAULT_DEVICE_PARAMETERS = {
+        'Yabby34G': {
+            '2000': {
+                'bPeriodicUploadHrMin': '720',
+                'bInTripUploadMinSec': '1800',
+                'bInTripLogMinSec': '120',
+                'fGpsPowerMode': '1',
+                'bTrackingMode': '0'
+            },
+            '2100': {
+                'fUploadOnStart': '1',
+                'fUploadDuring': '1',
+                'fUploadOnEnd': '1'
+            }
+        },
+        'Oyster34G': {
+            '2000': {
+                'bPeriodicUploadHrMin': '720',
+                'bInTripUploadMinSec': '1800',
+                'bInTripLogMinSec': '120',
+                'fGpsPowerMode': '1',
+                'bTrackingMode': '0'
+            },
+            '2100': {
+                'fUploadOnStart': '1',
+                'fUploadDuring': '1',
+                'fUploadOnEnd': '1'
+            }
+        },
+        'Oyster2': {
+            '2000': {
+                'bPeriodicUploadHrMin': '720',
+                'bInTripUploadMinSec': '1800',
+                'bInTripLogMinSec': '120'
+            },
+            '2100': {
+                'fPeriodicOnly': '0',
+                'fUploadOnStart': '1',
+                'fUploadDuring': '1',
+                'fUploadOnEnd': '1'
+            }
+        },
+        'YabbyEdge': {
+            '2000': {
+                'bPeriodicUploadHrMin': '720',
+                'bMoveLogMinSec': '180',
+                'bMoveUploadMinSec': '1800',
+                'bTrackingMode': '0'
+            },
+            '2400': {
+                'fUploadOnStart': '1',
+                'fUploadOnEnd': '1',
+                'fDisableMoveLogs': '0',
+                'fEnableMoveUploads': '1'
+            }
         }
     };
 
@@ -417,7 +475,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Get system parameters for each device
+     * Get system parameters for each device - Enhanced to use defaults when missing
      */
     async function enrichWithSystemParameters() {
         showAlert('Getting system parameters for devices...', 'info');
@@ -437,18 +495,66 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 );
                 
                 if (response && response.SystemParameters) {
-                    device.systemParameters = response.SystemParameters;
+                    // Use actual parameters but fill in missing sections with defaults
+                    const systemParams = { ...response.SystemParameters };
+                    const defaultParams = DEFAULT_DEVICE_PARAMETERS[deviceType];
+                    
+                    if (defaultParams) {
+                        // Check each default section
+                        Object.keys(defaultParams).forEach(sectionId => {
+                            if (!systemParams[sectionId]) {
+                                // Section is missing, use defaults
+                                systemParams[sectionId] = { ...defaultParams[sectionId] };
+                                console.log(`Using default parameters for section ${sectionId} on device ${device.serialNumber}`);
+                            } else {
+                                // Section exists, but check for missing individual parameters
+                                Object.keys(defaultParams[sectionId]).forEach(paramKey => {
+                                    if (systemParams[sectionId][paramKey] === undefined) {
+                                        systemParams[sectionId][paramKey] = defaultParams[sectionId][paramKey];
+                                        console.log(`Using default value for ${paramKey} in section ${sectionId} on device ${device.serialNumber}`);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    
+                    device.systemParameters = systemParams;
                     device.deviceType = deviceType;
-                    device.recoveryModeStatus = response.RecoveryMode; // Add recovery mode status
+                    device.recoveryModeStatus = response.RecoveryMode;
+                } else {
+                    // No system parameters returned, use all defaults
+                    const defaultParams = DEFAULT_DEVICE_PARAMETERS[deviceType];
+                    if (defaultParams) {
+                        device.systemParameters = JSON.parse(JSON.stringify(defaultParams)); // Deep clone
+                        device.deviceType = deviceType;
+                        device.recoveryModeStatus = false;
+                        console.log(`Using all default parameters for device ${device.serialNumber}`);
+                    }
                 }
             } catch (error) {
                 console.warn(`Could not get system parameters for device ${device.serialNumber}:`, error);
+                // On error, try to use defaults
+                const defaultParams = DEFAULT_DEVICE_PARAMETERS[deviceType];
+                if (defaultParams) {
+                    device.systemParameters = JSON.parse(JSON.stringify(defaultParams)); // Deep clone
+                    device.deviceType = deviceType;
+                    device.recoveryModeStatus = false;
+                    console.log(`Using default parameters due to error for device ${device.serialNumber}`);
+                }
             }
         }
         
         const devicesWithParams = digitalMatterDevices.filter(d => d.systemParameters);
         const devicesInRecovery = digitalMatterDevices.filter(d => d.recoveryModeStatus === true);
         showAlert(`Retrieved parameters for ${devicesWithParams.length} devices (${devicesInRecovery.length} in recovery mode)`, 'success');
+    }
+
+    /**
+     * Clean dropdown option labels by removing numeric prefixes
+     */
+    function cleanDropdownLabel(label) {
+        // Remove patterns like "0 - ", "1 - ", "255 - " etc.
+        return label.replace(/^\d+\s*-\s*/, '');
     }
 
     /**
@@ -834,10 +940,19 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 if (dropdownOptions) {
                     // Generate dropdown
                     let optionsHtml = '';
+                    let hasMatchingOption = false;
+                    
                     dropdownOptions.forEach(option => {
                         const selected = option.value === paramValue.toString() ? 'selected' : '';
+                        if (selected) hasMatchingOption = true;
                         optionsHtml += `<option value="${option.value}" ${selected}>${option.label}</option>`;
                     });
+                    
+                    // If current value doesn't match any dropdown option and we're in custom mode, add it
+                    const currentTemplate = detectCurrentTemplate(device);
+                    if (!hasMatchingOption && currentTemplate === 'custom') {
+                        optionsHtml = `<option value="${paramValue}" selected>${paramValue} (Current Value)</option>` + optionsHtml;
+                    }
                     
                     parametersHtml += `
                         <div class="parameter-field">
@@ -1179,7 +1294,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Generate dropdown options based on parameter type - UPDATED VERSION
+     * Generate dropdown options based on parameter type - UPDATED VERSION with cleaned labels
      */
     function generateDropdownOptions(paramKey, currentValue, deviceType) {
         let options = [];
@@ -1187,22 +1302,22 @@ geotab.addin.digitalMatterDeviceManager = function () {
         switch (paramKey) {
             case 'fGpsPowerMode':
                 options = [
-                    { value: '0', label: '0 - Low Power' },
-                    { value: '1', label: '1 - Performance' }
+                    { value: '0', label: 'Low Power' },
+                    { value: '1', label: 'Performance' }
                 ];
                 break;
                 
             case 'bTrackingMode':
                 if (deviceType === 'YabbyEdge') {
                     options = [
-                        { value: '0', label: '0 - Movement based' },
-                        { value: '1', label: '1 - Periodic Update' }
+                        { value: '0', label: 'Movement based' },
+                        { value: '1', label: 'Periodic Update' }
                     ];
                 } else {
                     options = [
-                        { value: '0', label: '0 - GPS Movement Trips' },
-                        { value: '1', label: '1 - Jostle Trips' },
-                        { value: '2', label: '2 - Periodic Update' }
+                        { value: '0', label: 'GPS Movement Trips' },
+                        { value: '1', label: 'Jostle Trips' },
+                        { value: '2', label: 'Periodic Update' }
                     ];
                 }
                 break;
@@ -1220,8 +1335,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
             case 'fDisableWakeFilter':
             case 'fDisableLogFilter':
                 options = [
-                    { value: '0', label: '0 - No' },
-                    { value: '1', label: '1 - Yes' }
+                    { value: '0', label: 'No' },
+                    { value: '1', label: 'Yes' }
                 ];
                 break;
                 
@@ -1229,24 +1344,24 @@ geotab.addin.digitalMatterDeviceManager = function () {
             case 'fNoGpsFreshen':
             case 'fDisableMoveLogs':
                 options = [
-                    { value: '0', label: '0 - Yes' },
-                    { value: '1', label: '1 - No' }
+                    { value: '0', label: 'Yes' },
+                    { value: '1', label: 'No' }
                 ];
                 break;
                 
             case 'bDigital':
                 options = [
-                    { value: '255', label: '255 - None' },
-                    { value: '0', label: '0 - Emulated Ignition (0)' },
-                    { value: '1', label: '1 - Input 1' },
-                    { value: '2', label: '2 - Input 2' },
-                    { value: '3', label: '3 - Input 3' },
-                    { value: '4', label: '4 - Input 4' },
-                    { value: '5', label: '5 - Input 5' },
-                    { value: '6', label: '6 - Input 6' },
-                    { value: '7', label: '7 - Input 7' },
-                    { value: '8', label: '8 - Input 8' },
-                    { value: '9', label: '9 - Input 9' }
+                    { value: '255', label: 'None' },
+                    { value: '0', label: 'Emulated Ignition (0)' },
+                    { value: '1', label: 'Input 1' },
+                    { value: '2', label: 'Input 2' },
+                    { value: '3', label: 'Input 3' },
+                    { value: '4', label: 'Input 4' },
+                    { value: '5', label: 'Input 5' },
+                    { value: '6', label: 'Input 6' },
+                    { value: '7', label: 'Input 7' },
+                    { value: '8', label: 'Input 8' },
+                    { value: '9', label: 'Input 9' }
                 ];
                 break;
                 
@@ -1261,7 +1376,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 }
                 break;
                 
-            // UPDATED: Limited movement logging and upload options
+            // Limited movement logging and upload options
             case 'bInTripUploadMinSec':
             case 'bInTripLogMinSec':
             case 'bMoveUploadMinSec':
