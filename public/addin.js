@@ -902,8 +902,12 @@ geotab.addin.digitalMatterDeviceManager = function () {
         // Combine headers and rows
         const csvContent = [headers.join(','), ...csvRows].join('\n');
         
+        // Add UTF-8 BOM to help Excel recognize the encoding
+        const bom = '\uFEFF';
+        const csvWithBom = bom + csvContent;
+        
         // Create and download file
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         
