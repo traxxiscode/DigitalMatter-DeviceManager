@@ -818,6 +818,108 @@ geotab.addin.digitalMatterDeviceManager = function () {
         showParametersInline(device);
     };
 
+    /**
+     * Format parameter value with appropriate conversion/units
+     */
+    function formatParameterValue(paramKey, value, deviceType) {
+        const numValue = parseInt(value);
+        
+        switch (paramKey) {
+            case 'bPeriodicUploadHrMin':
+                if (numValue >= 60 && numValue % 60 === 0) {
+                    const hours = numValue / 60;
+                    return `${value} min (${hours} hours)`;
+                }
+                return `${value} min`;
+                
+            case 'bInTripUploadMinSec':
+            case 'bInTripLogMinSec':
+            case 'bMoveUploadMinSec':
+            case 'bMoveLogMinSec':
+                if (numValue >= 60 && numValue % 60 === 0) {
+                    const minutes = numValue / 60;
+                    return `${value} sec (${minutes} min)`;
+                }
+                return `${value} sec`;
+                
+            case 'bGpsTimeoutMinSec':
+                if (numValue >= 60) {
+                    const minutes = Math.floor(numValue / 60);
+                    const remainingSeconds = numValue % 60;
+                    if (remainingSeconds > 0) {
+                        return `${value} sec (${minutes}m ${remainingSeconds}s)`;
+                    } else {
+                        return `${value} sec (${minutes} min)`;
+                    }
+                }
+                return `${value} sec`;
+                
+            case 'bMoveEndTimeSec_10':
+                if (numValue >= 60 && numValue % 60 === 0) {
+                    const minutes = numValue / 60;
+                    return `${value} sec (${minutes} min)`;
+                }
+                return `${value} sec`;
+                
+            case 'bOnceOffUploadDelayMinutes':
+                if (numValue === 0) {
+                    return `${value} min (Disabled)`;
+                }
+                return `${value} min`;
+                
+            case 'bGpsFixMultiplier':
+                if (numValue === 0) {
+                    return `${value} (Disabled)`;
+                } else if (numValue === 1) {
+                    return `${value} (Default)`;
+                }
+                return value;
+                
+            case 'fGpsPowerMode':
+                return numValue === 0 ? 'Low Power' : 'Performance';
+                
+            case 'bTrackingMode':
+                if (deviceType === 'YabbyEdge') {
+                    return numValue === 0 ? 'Movement based' : 'Periodic Update';
+                } else {
+                    switch (numValue) {
+                        case 0: return 'GPS Movement Trips';
+                        case 1: return 'Jostle Trips';
+                        case 2: return 'Periodic Update';
+                        default: return value;
+                    }
+                }
+                
+            case 'bDigital':
+                if (numValue === 255) return 'None';
+                if (numValue === 0) return 'Emulated Ignition (0)';
+                if (numValue >= 1 && numValue <= 9) return `Input ${numValue}`;
+                return value;
+                
+            // Yes/No parameters
+            case 'fUploadOnStart':
+            case 'fUploadDuring':
+            case 'fUploadOnEnd':
+            case 'fUploadOnJostle':
+            case 'fAvoidGpsWander':
+            case 'fCellTowerFallback':
+            case 'fPeriodicOnly':
+            case 'fJostleTrips':
+            case 'fEnableMoveUploads':
+            case 'fDisableWakeFilter':
+            case 'fDisableLogFilter':
+                return numValue === 0 ? 'No' : 'Yes';
+                
+            // Inverted Yes/No parameters
+            case 'fNoGpsFreshen':
+            case 'fDisableMoveLogs':
+                return numValue === 0 ? 'Yes' : 'No';
+                
+            default:
+                return value;
+        }
+    }
+
     function showParametersInline(device) {
         // Find the device card
         const deviceCards = document.querySelectorAll('.device-card');
@@ -951,7 +1053,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     // If current value doesn't match any dropdown option and we're in custom mode, add it
                     const currentTemplate = detectCurrentTemplate(device);
                     if (!hasMatchingOption && currentTemplate === 'custom') {
-                        optionsHtml = `<option value="${paramValue}" selected>${paramValue} (Current Value)</option>` + optionsHtml;
+                        const formattedCurrentValue = formatParameterValue(paramKey, paramValue, device.deviceType);
+                        optionsHtml = `<option value="${paramValue}" selected>${formattedCurrentValue}</option>` + optionsHtml;
                     }
                     
                     parametersHtml += `
