@@ -71,6 +71,51 @@
                 </div>
             </div>
 
+            <div class="container-fluid">
+                <div class="filters-section">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label for="modeFilter" class="form-label fw-semibold">Mode</label>
+                            <select class="form-select" id="modeFilter">
+                                <option value="all">All Modes</option>
+                                <option value="normal">Normal Mode</option>
+                                <option value="recovery">Recovery Mode</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="batteryFilter" class="form-label fw-semibold">Battery</label>
+                            <select class="form-select" id="batteryFilter">
+                                <option value="all">All Levels</option>
+                                <option value="good">Good (>50%)</option>
+                                <option value="low">Low (20-50%)</option>
+                                <option value="critical">Critical (<20%)</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="deviceTypeFilter" class="form-label fw-semibold">Device Type</label>
+                            <select class="form-select" id="deviceTypeFilter">
+                                <option value="all">All Types</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sortBy" class="form-label fw-semibold">Sort By</label>
+                            <select class="form-select" id="sortBy">
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="battery-high">Battery (High to Low)</option>
+                                <option value="battery-low">Battery (Low to High)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-success" onclick="downloadCSV()">
+                                <i class="fas fa-download me-2"></i>Download CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Devices List -->
             <div id="devicesList">
                 <!-- Loading State -->

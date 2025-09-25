@@ -633,9 +633,12 @@ geotab.addin.digitalMatterDeviceManager = function () {
 
             console.log('Recovery mode queues have been loaded')
             
-            // Step 7: Render devices
+            // Step 7: Populate filter options
+            populateDeviceTypeFilter();
+            
+            // Step 8: Apply initial filters and render devices
             filteredDevices = [...digitalMatterDevices];
-            renderDevices();
+            applyFiltersAndSort();
             
         } catch (error) {
             console.error('Error loading device data:', error);
@@ -697,6 +700,9 @@ geotab.addin.digitalMatterDeviceManager = function () {
                                     <p class="card-text text-muted mb-0">
                                         <small>Geotab Serial: ${device.geotabSerial || 'N/A'}</small>
                                     </p>
+                                    <p class="card-text text-muted mb-0">
+                                        <small>Type: ${device.deviceType || 'Unknown'}</small>
+                                    </p>
                                 </div>
                                 <div class="col-md-2 text-center">
                                     ${device.batteryPercentage !== null ? `
@@ -737,6 +743,179 @@ geotab.addin.digitalMatterDeviceManager = function () {
         
         container.innerHTML = devicesHtml;
         updateDeviceCount();
+    }
+
+    /**
+     * Get battery category for filtering
+     */
+    function getBatteryCategory(percentage) {
+        if (percentage === null || percentage === undefined) return 'Unknown';
+        if (percentage > 50) return 'Good';
+        if (percentage > 20) return 'Low';
+        return 'Critical';
+    }
+
+    /**
+     * Apply all filters and sorts to devices
+     */
+    function applyFiltersAndSort() {
+        // Start with all devices
+        let devices = [...digitalMatterDevices];
+        
+        // Apply search filter first
+        const searchTerm = document.getElementById('deviceSearch').value.toLowerCase();
+        if (searchTerm) {
+            devices = devices.filter(device => 
+                (device.geotabName && device.geotabName.toLowerCase().includes(searchTerm)) ||
+                device.serialNumber.toLowerCase().includes(searchTerm) ||
+                (device.geotabSerial && device.geotabSerial.toLowerCase().includes(searchTerm))
+            );
+        }
+        
+        // Apply filters
+        const modeFilter = document.getElementById('modeFilter').value;
+        const batteryFilter = document.getElementById('batteryFilter').value;
+        const deviceTypeFilter = document.getElementById('deviceTypeFilter').value;
+        
+        // Mode filter
+        if (modeFilter !== 'all') {
+            if (modeFilter === 'recovery') {
+                devices = devices.filter(device => device.recoveryModeStatus === true);
+            } else if (modeFilter === 'normal') {
+                devices = devices.filter(device => device.recoveryModeStatus !== true);
+            }
+        }
+        
+        // Battery filter
+        if (batteryFilter !== 'all') {
+            devices = devices.filter(device => {
+                const category = getBatteryCategory(device.batteryPercentage);
+                return category.toLowerCase() === batteryFilter.toLowerCase();
+            });
+        }
+        
+        // Device type filter
+        if (deviceTypeFilter !== 'all') {
+            devices = devices.filter(device => device.deviceType === deviceTypeFilter);
+        }
+        
+        // Apply sorting
+        const sortBy = document.getElementById('sortBy').value;
+        
+        switch (sortBy) {
+            case 'name-asc':
+                devices.sort((a, b) => {
+                    const nameA = (a.geotabName || 'Unknown').toLowerCase();
+                    const nameB = (b.geotabName || 'Unknown').toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+                break;
+            case 'name-desc':
+                devices.sort((a, b) => {
+                    const nameA = (a.geotabName || 'Unknown').toLowerCase();
+                    const nameB = (b.geotabName || 'Unknown').toLowerCase();
+                    return nameB.localeCompare(nameA);
+                });
+                break;
+            case 'battery-high':
+                devices.sort((a, b) => {
+                    const battA = a.batteryPercentage === null ? -1 : a.batteryPercentage;
+                    const battB = b.batteryPercentage === null ? -1 : b.batteryPercentage;
+                    return battB - battA;
+                });
+                break;
+            case 'battery-low':
+                devices.sort((a, b) => {
+                    const battA = a.batteryPercentage === null ? 101 : a.batteryPercentage;
+                    const battB = b.batteryPercentage === null ? 101 : b.batteryPercentage;
+                    return battA - battB;
+                });
+                break;
+        }
+        
+        // Update filtered devices
+        filteredDevices = devices;
+        
+        // Re-render
+        renderDevices();
+    }
+
+    /**
+     * Filter devices based on all criteria - Updated to use new filtering system
+     */
+    function filterDevices() {
+        applyFiltersAndSort();
+    }
+
+    /**
+     * Populate device type filter options
+     */
+    function populateDeviceTypeFilter() {
+        const deviceTypeFilter = document.getElementById('deviceTypeFilter');
+        if (!deviceTypeFilter) return;
+        
+        // Get unique device types
+        const deviceTypes = [...new Set(digitalMatterDevices
+            .map(device => device.deviceType)
+            .filter(type => type)
+        )].sort();
+        
+        // Clear existing options except "All"
+        deviceTypeFilter.innerHTML = '<option value="all">All Types</option>';
+        
+        // Add device type options
+        deviceTypes.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            deviceTypeFilter.appendChild(option);
+        });
+    }
+
+    /**
+     * Download filtered devices as CSV
+     */
+    function downloadCSV() {
+        if (filteredDevices.length === 0) {
+            showAlert('No devices to export', 'warning');
+            return;
+        }
+        
+        // CSV headers
+        const headers = ['Name', 'Serial', 'Geotab Serial', 'Battery Percentage', 'Mode', 'Device Type'];
+        
+        // Convert filtered devices to CSV rows
+        const csvRows = filteredDevices.map(device => {
+            const mode = device.recoveryModeStatus === true ? 'Recovery Mode' : 'Normal Mode';
+            const batteryPercentage = device.batteryPercentage !== null ? device.batteryPercentage + '%' : 'N/A';
+            
+            return [
+                device.geotabName || 'Unknown Device',
+                device.serialNumber,
+                device.geotabSerial || 'N/A',
+                batteryPercentage,
+                mode,
+                device.deviceType || 'Unknown'
+            ].map(field => `"${field}"`).join(',');
+        });
+        
+        // Combine headers and rows
+        const csvContent = [headers.join(','), ...csvRows].join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `digital-matter-devices-${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert(`Exported ${filteredDevices.length} devices to CSV`, 'success');
     }
 
     /**
@@ -1866,7 +2045,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         function debounceSearch() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                filterDevices();
+                applyFiltersAndSort();
             }, 300);
         }
         
@@ -1874,6 +2053,28 @@ geotab.addin.digitalMatterDeviceManager = function () {
         const deviceSearch = document.getElementById('deviceSearch');
         if (deviceSearch) {
             deviceSearch.addEventListener('input', debounceSearch);
+        }
+        
+        // Add event listeners for filters and sort
+        const modeFilter = document.getElementById('modeFilter');
+        const batteryFilter = document.getElementById('batteryFilter');
+        const deviceTypeFilter = document.getElementById('deviceTypeFilter');
+        const sortBy = document.getElementById('sortBy');
+        
+        if (modeFilter) {
+            modeFilter.addEventListener('change', applyFiltersAndSort);
+        }
+        
+        if (batteryFilter) {
+            batteryFilter.addEventListener('change', applyFiltersAndSort);
+        }
+        
+        if (deviceTypeFilter) {
+            deviceTypeFilter.addEventListener('change', applyFiltersAndSort);
+        }
+        
+        if (sortBy) {
+            sortBy.addEventListener('change', applyFiltersAndSort);
         }
 
         // Handle keyboard shortcuts
@@ -1888,7 +2089,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             if (event.key === 'Escape') {
                 if (deviceSearch && deviceSearch.value) {
                     deviceSearch.value = '';
-                    filterDevices();
+                    applyFiltersAndSort();
                 }
             }
         });
@@ -2411,6 +2612,9 @@ geotab.addin.digitalMatterDeviceManager = function () {
             recoveryElement.remove();
         }
     };
+
+    window.applyFiltersAndSort = applyFiltersAndSort;
+    window.downloadCSV = downloadCSV;
 
     return {
         /**
