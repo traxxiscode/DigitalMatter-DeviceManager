@@ -129,6 +129,28 @@ geotab.addin.digitalMatterDeviceManager = function () {
             'fEnableMoveUploads': 'Upload During Movement - Sends updates while moving. ⚠️ Increases battery use.'
         }
         }
+    },
+
+    // Remora
+    'Remora': {
+        '2000': {
+            name: 'Basic Tracking',
+            description: 'Set how often your device records location data and uploads it.',
+            params: {
+                'bPeriodicUploadHrMin': 'Heartbeat Interval - How often the device checks in when idle (minutes). ⚠️ Shorter times use more battery.',
+                'bInTripUploadMinSec': 'Upload While Moving - How often the device sends updates during a trip (seconds). ⚠️ More frequent uploads use more battery.',
+                'bInTripLogMinSec': 'GPS Fix Frequency - How often the device records a GPS point during a trip (seconds). ⚠️ More frequent logging gives more detail but reduces battery life.'
+            }
+        },
+        '2100': {
+            name: 'Advanced Tracking',
+            description: 'Control when the device uploads data during trips.',
+            params: {
+                'fUploadOnStart': 'Upload at Trip Start - Sends data immediately when a trip begins.',
+                'fUploadDuring': 'Upload During Trip - Sends updates while moving (uses the In-Trip Upload setting). ⚠️ Increases battery use.',
+                'fUploadOnEnd': 'Upload at Trip End - Sends data immediately after the trip finishes.'
+            }
+        }
     }
     };
 
@@ -241,6 +263,18 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 'fDisableMoveLogs': '0',
                 'fEnableMoveUploads': '1'
             }
+        },
+        'Remora': {
+            '2000': {
+                'bPeriodicUploadHrMin': '720',
+                'bInTripUploadMinSec': '1800',
+                'bInTripLogMinSec': '120'
+            },
+            '2100': {
+                'fUploadOnStart': '1',
+                'fUploadDuring': '1',
+                'fUploadOnEnd': '1'
+            }
         }
     };
 
@@ -249,7 +283,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
         '87': 'Oyster34G',
         '77': 'Oyster2', 
         '85': 'YabbyEdge',
-        '97': 'Yabby34G'
+        '97': 'Yabby34G',
+        '33': 'Remora'  
     };
 
     function getCurrentGeotabDatabase() {
@@ -663,6 +698,21 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
+     * Format device type for display to user
+     */
+    function formatDeviceTypeForDisplay(deviceType) {
+        const displayNames = {
+            'Yabby34G': 'Yabby 3',
+            'Oyster34G': 'Oyster 3',
+            'Oyster2': 'Oyster 2',
+            'YabbyEdge': 'Yabby Edge',
+            'Remora': 'Remora'
+        };
+        
+        return displayNames[deviceType] || deviceType;
+    }
+
+    /**
      * Render devices in the UI
      */
     function renderDevices() {
@@ -701,7 +751,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                                         <small>Geotab Serial: ${device.geotabSerial || 'N/A'}</small>
                                     </p>
                                     <p class="card-text text-muted mb-0">
-                                        <small>Type: ${device.deviceType || 'Unknown'}</small>
+                                        <small>Type: ${formatDeviceTypeForDisplay(device.deviceType) || 'Unknown'}</small>
                                     </p>
                                 </div>
                                 <div class="col-md-2 text-center">
@@ -863,11 +913,11 @@ geotab.addin.digitalMatterDeviceManager = function () {
         // Clear existing options except "All"
         deviceTypeFilter.innerHTML = '<option value="all">All Types</option>';
         
-        // Add device type options
+        // Add device type options with formatted display names
         deviceTypes.forEach(type => {
             const option = document.createElement('option');
             option.value = type;
-            option.textContent = type;
+            option.textContent = formatDeviceTypeForDisplay(type);
             deviceTypeFilter.appendChild(option);
         });
     }
@@ -895,7 +945,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 device.geotabSerial || 'N/A',
                 batteryPercentage,
                 mode,
-                device.deviceType || 'Unknown'
+                formatDeviceTypeForDisplay(device.deviceType) || 'Unknown'
             ].map(field => `"${field}"`).join(',');
         });
         
@@ -1155,7 +1205,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                                 <h5 class="text-primary mb-1">
                                     <i class="fas fa-cog me-2"></i>Device Parameters
                                 </h5>
-                                <p class="text-muted mb-0">${device.geotabName || device.serialNumber} - ${device.deviceType || 'Unknown Type'}</p>
+                                <p class="text-muted mb-0">${device.geotabName || device.serialNumber} - ${formatDeviceTypeForDisplay(device.deviceType) || 'Unknown Type'}</p>
                             </div>
                             <button class="btn btn-outline-secondary btn-sm" onclick="hideDeviceParameters('${device.serialNumber}')">
                                 <i class="fas fa-times"></i>
