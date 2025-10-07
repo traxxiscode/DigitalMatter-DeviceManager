@@ -151,6 +151,30 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 'fUploadOnEnd': 'Upload at Trip End - Sends data immediately after the trip finishes.'
             }
         }
+    },
+
+    // Remora34G
+    'Remora34G': {
+        '2000': {
+            name: 'Basic Tracking',
+            description: 'Set how often your device records location data and uploads it.',
+            params: {
+                'bPeriodicUploadHrMin': 'Heartbeat Interval - How often the device checks in when idle (minutes). ⚠️ Shorter times use more battery.',
+                'bInTripUploadMinSec': 'Upload While Moving - How often the device sends updates during a trip (seconds). ⚠️ More frequent uploads use more battery.',
+                'bInTripLogMinSec': 'GPS Fix Frequency - How often the device records a GPS point during a trip (seconds). ⚠️ More frequent logging gives more detail but reduces battery life.',
+                'fGpsPowerMode': 'GPS Power Mode - Choose whether to save battery or prioritize GPS accuracy.',
+                'bTrackingMode': 'Tracking Method - Select how the device detects and tracks trips.'
+            }
+        },
+        '2100': {
+            name: 'Advanced Tracking',
+            description: 'Control when the device uploads data during trips.',
+            params: {
+                'fUploadOnStart': 'Upload at Trip Start - Sends data immediately when a trip begins.',
+                'fUploadDuring': 'Upload During Trip - Sends updates while moving (uses the In-Trip Upload setting). ⚠️ Increases battery use.',
+                'fUploadOnEnd': 'Upload at Trip End - Sends data immediately after the trip finishes.'
+            }
+        }
     }
     };
 
@@ -275,6 +299,20 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 'fUploadDuring': '1',
                 'fUploadOnEnd': '1'
             }
+        },
+        'Remora34G': {
+            '2000': {
+                'bPeriodicUploadHrMin': '720',
+                'bInTripUploadMinSec': '1800',
+                'bInTripLogMinSec': '120',
+                'fGpsPowerMode': '1',
+                'bTrackingMode': '0'
+            },
+            '2100': {
+                'fUploadOnStart': '1',
+                'fUploadDuring': '1',
+                'fUploadOnEnd': '1'
+            }
         }
     };
 
@@ -284,7 +322,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
         '77': 'Oyster2', 
         '85': 'YabbyEdge',
         '97': 'Yabby34G',
-        '33': 'Remora'  
+        '33': 'Remora',
+        '96': 'Remora34G'
     };
 
     function getCurrentGeotabDatabase() {
@@ -706,7 +745,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
             'Oyster34G': 'Oyster 3',
             'Oyster2': 'Oyster 2',
             'YabbyEdge': 'Yabby Edge',
-            'Remora': 'Remora'
+            'Remora': 'Remora',
+            'Remora34G': 'Remora 3'
         };
         
         return displayNames[deviceType] || deviceType;
