@@ -717,6 +717,9 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 showAccessDenied();
                 return;
             }
+            else {
+                console.log('User has required security clearance, proceeding to load data.');
+            }
             
             // Step 1: Load Digital Matter devices (now filtered by client)
             await loadDigitalMatterDevices();
