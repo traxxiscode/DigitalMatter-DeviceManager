@@ -372,9 +372,12 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     console.log('Current user object:', currentUser);
                     console.log('Security groups:', currentUser.securityGroups);
                     
-                    // Check if user has EverythingSecurity group
+                    // Check if user has EverythingSecurity or SupervisorSecurity group
                     const hasAccess = currentUser.securityGroups && 
-                        currentUser.securityGroups.some(group => group.name === '**EverythingSecurity**');
+                        currentUser.securityGroups.some(group => 
+                            group.name === '**EverythingSecurity**' || 
+                            group.name === '**SupervisorSecurity**'
+                        );
                     
                     resolve(hasAccess);
                 }, function(error) {
