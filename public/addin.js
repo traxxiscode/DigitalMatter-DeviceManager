@@ -341,6 +341,50 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
+     * Check if current user has required security clearance
+     */
+    async function checkUserClearance() {
+        return new Promise((resolve, reject) => {
+            api.getSession(function(session) {
+                console.log('session:', session);
+                if (!session || !session.userName) {
+                    reject(new Error('No username found in session'));
+                    return;
+                }
+                
+                const username = session.userName;
+                console.log('Current username:', username);
+                
+                // Get all users
+                api.call('Get', {
+                    typeName: 'User'
+                }, function(users) {
+                    console.log('Retrieved users:', users);
+                    
+                    // Find current user
+                    const currentUser = users.find(user => user.name === username);
+                    
+                    if (!currentUser) {
+                        reject(new Error('Current user not found in user list'));
+                        return;
+                    }
+                    
+                    console.log('Current user object:', currentUser);
+                    console.log('Security groups:', currentUser.securityGroups);
+                    
+                    // Check if user has EverythingSecurity group
+                    const hasAccess = currentUser.securityGroups && 
+                        currentUser.securityGroups.some(group => group.name === '**EverythingSecurity**');
+                    
+                    resolve(hasAccess);
+                }, function(error) {
+                    reject(error);
+                });
+            });
+        });
+    }
+
+    /**
      * Make a Geotab API call
      */
     async function makeGeotabCall(method, typeName, parameters = {}) {
@@ -659,10 +703,18 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Load all device data - Modified to include recovery mode queues
+     * Load all device data - Modified to include user clearance check
      */
     async function loadAllDeviceData() {
         try {
+            // Check user clearance first
+            const hasAccess = await checkUserClearance();
+            
+            if (!hasAccess) {
+                showAccessDenied();
+                return;
+            }
+            
             // Step 1: Load Digital Matter devices (now filtered by client)
             await loadDigitalMatterDevices();
 
@@ -1053,6 +1105,29 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 </button>
             </div>
         `;
+    }
+
+    /**
+     * Show access denied message
+     */
+    function showAccessDenied() {
+        const container = document.getElementById('devicesList');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="access-denied text-center py-5">
+                <i class="fas fa-lock fa-4x text-danger mb-4"></i>
+                <h4 class="text-danger">Access Denied</h4>
+                <p class="text-muted">User does not have clearance to use this app.</p>
+                <p class="text-muted small">Please contact your administrator if you believe you should have access.</p>
+            </div>
+        `;
+        
+        // Hide controls section
+        const controlsSections = document.querySelectorAll('.controls-section, .filters-section');
+        controlsSections.forEach(section => {
+            section.style.display = 'none';
+        });
     }
 
     /**
