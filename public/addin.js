@@ -1125,7 +1125,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 <i class="fas fa-lock fa-4x text-danger mb-4"></i>
                 <h4 class="text-danger">Access Denied</h4>
                 <p class="text-muted">User does not have clearance to use this app.</p>
-                <p class="text-muted small">Please contact your administrator if you believe you should have access.</p>
+                <p class="text-muted small">Please contact Traxxis GPS if you believe you should have access.</p>
             </div>
         `;
         
