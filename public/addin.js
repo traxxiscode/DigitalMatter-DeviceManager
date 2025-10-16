@@ -17,6 +17,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     let geotabDevices = [];
     let filteredDevices = [];
     let currentEditingDevice = null;
+    let userHasClearance = false;
 
     const CLIENT_MAPPING = {
         "regendiesel": "Regen Diesel Repair",
@@ -711,11 +712,10 @@ geotab.addin.digitalMatterDeviceManager = function () {
     async function loadAllDeviceData() {
         try {
             // Check user clearance first
-            const hasAccess = await checkUserClearance();
+            userHasClearance = await checkUserClearance();
             
-            if (!hasAccess) {
-                showAccessDenied();
-                return;
+            if (!userHasClearance ) {
+                console.log('User does not have required security clearance, buttons will be disabled.');
             }
             else {
                 console.log('User has required security clearance, proceeding to load data.');
@@ -873,15 +873,28 @@ geotab.addin.digitalMatterDeviceManager = function () {
                                     </div>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <button class="btn btn-primary btn-sm me-2 mb-1" 
-                                            onclick="viewDeviceParameters('${device.serialNumber}')"
-                                            ${!device.systemParameters ? 'disabled' : ''}>
-                                        <i class="fas fa-cog me-1"></i>Parameters
-                                    </button>
-                                    <button class="btn ${recoveryButtonClass} btn-sm mb-1" 
-                                            onclick="viewRecoveryMode('${device.serialNumber}')">
-                                        <i class="fas fa-life-ring me-1"></i>${recoveryButtonText}
-                                    </button>
+                                    ${userHasClearance ? `
+                                        <button class="btn btn-primary btn-sm me-2 mb-1" 
+                                                onclick="viewDeviceParameters('${device.serialNumber}')"
+                                                ${!device.systemParameters ? 'disabled' : ''}>
+                                            <i class="fas fa-cog me-1"></i>Parameters
+                                        </button>
+                                        <button class="btn ${recoveryButtonClass} btn-sm mb-1" 
+                                                onclick="viewRecoveryMode('${device.serialNumber}')">
+                                            <i class="fas fa-life-ring me-1"></i>${recoveryButtonText}
+                                        </button>
+                                    ` : `
+                                        <button class="btn btn-secondary btn-sm me-2 mb-1" 
+                                                disabled
+                                                title="Requires Administrator or Supervisor clearance">
+                                            <i class="fas fa-lock me-1"></i>Parameters
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm mb-1" 
+                                                disabled
+                                                title="Requires Administrator or Supervisor clearance">
+                                            <i class="fas fa-lock me-1"></i>Recovery Mode
+                                        </button>
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -1111,29 +1124,6 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 </button>
             </div>
         `;
-    }
-
-    /**
-     * Show access denied message
-     */
-    function showAccessDenied() {
-        const container = document.getElementById('devicesList');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div class="access-denied text-center py-5">
-                <i class="fas fa-lock fa-4x text-danger mb-4"></i>
-                <h4 class="text-danger">Access Denied</h4>
-                <p class="text-muted">User does not have clearance to use this app.</p>
-                <p class="text-muted small">Please contact Traxxis GPS if you believe you should have access.</p>
-            </div>
-        `;
-        
-        // Hide controls section
-        const controlsSections = document.querySelectorAll('.controls-section, .filters-section');
-        controlsSections.forEach(section => {
-            section.style.display = 'none';
-        });
     }
 
     /**
