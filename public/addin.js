@@ -330,7 +330,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     function getCurrentGeotabDatabase() {
         return new Promise((resolve, reject) => {
             api.getSession(function(session) {
-                console.log('session:', session);
+                //console.log('session:', session);
                 if (session && session.database) {
                     resolve(session.database);
                 } else {
@@ -346,20 +346,20 @@ geotab.addin.digitalMatterDeviceManager = function () {
     async function checkUserClearance() {
         return new Promise((resolve, reject) => {
             api.getSession(function(session) {
-                console.log('session:', session);
+                //console.log('session:', session);
                 if (!session || !session.userName) {
                     reject(new Error('No username found in session'));
                     return;
                 }
                 
                 const username = session.userName;
-                console.log('Current username:', username);
+                //console.log('Current username:', username);
                 
                 // Get all users
                 api.call('Get', {
                     typeName: 'User'
                 }, function(users) {
-                    console.log('Retrieved users:', users);
+                    //console.log('Retrieved users:', users);
                     
                     // Find current user
                     const currentUser = users.find(user => user.name === username);
@@ -369,8 +369,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
                         return;
                     }
                     
-                    console.log('Current user object:', currentUser);
-                    console.log('Security groups:', currentUser.securityGroups);
+                    //console.log('Current user object:', currentUser);
+                    //console.log('Security groups:', currentUser.securityGroups);
                     
                     // Check if user has EverythingSecurity or SupervisorSecurity group
                     const hasAccess = currentUser.securityGroups && 
@@ -529,7 +529,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     `/TrackingDevice/GetGeotabSerial?product=${device.productId}&id=${device.serialNumber}`
                 );
 
-                console.log('Geotab serial response for device', device.serialNumber, response);
+                //console.log('Geotab serial response for device', device.serialNumber, response);
                 
                 if (response && response.GeotabSerial) {
                     device.geotabSerial = response.GeotabSerial;
@@ -627,13 +627,13 @@ geotab.addin.digitalMatterDeviceManager = function () {
                             if (!systemParams[sectionId]) {
                                 // Section is missing, use defaults
                                 systemParams[sectionId] = { ...defaultParams[sectionId] };
-                                console.log(`Using default parameters for section ${sectionId} on device ${device.serialNumber}`);
+                                //console.log(`Using default parameters for section ${sectionId} on device ${device.serialNumber}`);
                             } else {
                                 // Section exists, but check for missing individual parameters
                                 Object.keys(defaultParams[sectionId]).forEach(paramKey => {
                                     if (systemParams[sectionId][paramKey] === undefined) {
                                         systemParams[sectionId][paramKey] = defaultParams[sectionId][paramKey];
-                                        console.log(`Using default value for ${paramKey} in section ${sectionId} on device ${device.serialNumber}`);
+                                        //console.log(`Using default value for ${paramKey} in section ${sectionId} on device ${device.serialNumber}`);
                                     }
                                 });
                             }
@@ -650,7 +650,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                         device.systemParameters = JSON.parse(JSON.stringify(defaultParams)); // Deep clone
                         device.deviceType = deviceType;
                         device.recoveryModeStatus = false;
-                        console.log(`Using all default parameters for device ${device.serialNumber}`);
+                        //console.log(`Using all default parameters for device ${device.serialNumber}`);
                     }
                 }
             } catch (error) {
@@ -661,7 +661,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     device.systemParameters = JSON.parse(JSON.stringify(defaultParams)); // Deep clone
                     device.deviceType = deviceType;
                     device.recoveryModeStatus = false;
-                    console.log(`Using default parameters due to error for device ${device.serialNumber}`);
+                    //console.log(`Using default parameters due to error for device ${device.serialNumber}`);
                 }
             }
         }
@@ -1581,62 +1581,62 @@ geotab.addin.digitalMatterDeviceManager = function () {
      */
     function detectCurrentTemplate(device) {
         if (!device.systemParameters || !PARAMETER_TEMPLATES) {
-            console.log("No systemParameters or PARAMETER_TEMPLATES. Returning 'custom'");
+            //console.log("No systemParameters or PARAMETER_TEMPLATES. Returning 'custom'");
             return 'custom';
         }
 
-        console.log("System Parameters:", device.systemParameters);
-        console.log("Device Type:", device.deviceType);
+        //console.log("System Parameters:", device.systemParameters);
+       // console.log("Device Type:", device.deviceType);
 
         // Check each template to see if it matches current parameters
         for (const [templateId, template] of Object.entries(PARAMETER_TEMPLATES)) {
             if (templateId === 'custom') continue;
 
-            console.log(`\nChecking template: ${templateId}`);
+            //console.log(`\nChecking template: ${templateId}`);
             
             // Get device-specific template settings
             const deviceSpecificSettings = getDeviceSpecificTemplateSettings(template.settings, device.deviceType);
-            console.log("Device-specific template settings:", deviceSpecificSettings);
+            //console.log("Device-specific template settings:", deviceSpecificSettings);
             
             let matches = true;
 
             for (const [paramKey, templateValue] of Object.entries(deviceSpecificSettings)) {
-                console.log(`  Looking for paramKey: ${paramKey}, expected value: ${templateValue}`);
+                //console.log(`  Looking for paramKey: ${paramKey}, expected value: ${templateValue}`);
 
                 // Find the parameter in device data
                 let currentValue = null;
                 for (const [sectionId, sectionData] of Object.entries(device.systemParameters)) {
                     if (sectionData[paramKey] !== undefined) {
                         currentValue = sectionData[paramKey].toString();
-                        console.log(`    Found in section '${sectionId}': currentValue = ${currentValue}`);
+                        //console.log(`    Found in section '${sectionId}': currentValue = ${currentValue}`);
                         break;
                     }
                 }
 
                 if (currentValue === null) {
-                    console.log(`    ❌ paramKey '${paramKey}' not found in device.systemParameters`);
+                    //console.log(`    ❌ paramKey '${paramKey}' not found in device.systemParameters`);
                     matches = false;
                     break;
                 }
 
                 if (currentValue !== templateValue.toString()) {
-                    console.log(`    ❌ Value mismatch for '${paramKey}': expected '${templateValue}', got '${currentValue}'`);
+                    //console.log(`    ❌ Value mismatch for '${paramKey}': expected '${templateValue}', got '${currentValue}'`);
                     matches = false;
                     break;
                 } else {
-                    console.log(`    ✅ Match for '${paramKey}': '${currentValue}'`);
+                    //console.log(`    ✅ Match for '${paramKey}': '${currentValue}'`);
                 }
             }
 
             if (matches) {
-                console.log(`✅ Template '${templateId}' matches!`);
+                //console.log(`✅ Template '${templateId}' matches!`);
                 return templateId;
             } else {
-                console.log(`Template '${templateId}' did not match.`);
+                //console.log(`Template '${templateId}' did not match.`);
             }
         }
 
-        console.log("No templates matched. Returning 'custom'");
+        //console.log("No templates matched. Returning 'custom'");
         return 'custom';
     }
 
