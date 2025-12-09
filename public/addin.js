@@ -598,7 +598,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Get system parameters for each device - Enhanced to use defaults when missing
+     * Get system parameters for each device - Enhanced to capture LastCommsUTC
      */
     async function enrichWithSystemParameters() {
         showAlert('Getting system parameters for devices...', 'info');
@@ -628,13 +628,11 @@ geotab.addin.digitalMatterDeviceManager = function () {
                             if (!systemParams[sectionId]) {
                                 // Section is missing, use defaults
                                 systemParams[sectionId] = { ...defaultParams[sectionId] };
-                                //console.log(`Using default parameters for section ${sectionId} on device ${device.serialNumber}`);
                             } else {
                                 // Section exists, but check for missing individual parameters
                                 Object.keys(defaultParams[sectionId]).forEach(paramKey => {
                                     if (systemParams[sectionId][paramKey] === undefined) {
                                         systemParams[sectionId][paramKey] = defaultParams[sectionId][paramKey];
-                                        //console.log(`Using default value for ${paramKey} in section ${sectionId} on device ${device.serialNumber}`);
                                     }
                                 });
                             }
@@ -644,6 +642,11 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     device.systemParameters = systemParams;
                     device.deviceType = deviceType;
                     device.recoveryModeStatus = response.RecoveryMode;
+                    
+                    // Capture LastCommsUTC
+                    if (response.LastCommsUTC) {
+                        device.lastCommsUTC = response.LastCommsUTC;
+                    }
                 } else {
                     // No system parameters returned, use all defaults
                     const defaultParams = DEFAULT_DEVICE_PARAMETERS[deviceType];
@@ -651,7 +654,6 @@ geotab.addin.digitalMatterDeviceManager = function () {
                         device.systemParameters = JSON.parse(JSON.stringify(defaultParams)); // Deep clone
                         device.deviceType = deviceType;
                         device.recoveryModeStatus = false;
-                        //console.log(`Using all default parameters for device ${device.serialNumber}`);
                     }
                 }
             } catch (error) {
@@ -662,7 +664,6 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     device.systemParameters = JSON.parse(JSON.stringify(defaultParams)); // Deep clone
                     device.deviceType = deviceType;
                     device.recoveryModeStatus = false;
-                    //console.log(`Using default parameters due to error for device ${device.serialNumber}`);
                 }
             }
         }
@@ -670,6 +671,32 @@ geotab.addin.digitalMatterDeviceManager = function () {
         const devicesWithParams = digitalMatterDevices.filter(d => d.systemParameters);
         const devicesInRecovery = digitalMatterDevices.filter(d => d.recoveryModeStatus === true);
         showAlert(`Retrieved parameters for ${devicesWithParams.length} devices (${devicesInRecovery.length} in recovery mode)`, 'success');
+    }
+
+    /**
+     * Format UTC datetime to local readable format
+     */
+    function formatLastCommsDate(utcDateString) {
+        if (!utcDateString) return 'N/A';
+        
+        try {
+            // Ensure the string is treated as UTC
+            const utcString = utcDateString.endsWith("Z") ? utcDateString : utcDateString + "Z";
+            const date = new Date(utcString);
+            
+            // Format to local time with readable format
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (error) {
+            console.warn('Error formatting date:', error);
+            return 'Invalid Date';
+        }
     }
 
     /**
@@ -812,7 +839,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Render devices in the UI
+     * Render devices in the UI - Updated to include Last Communication Date
      */
     function renderDevices() {
         const container = document.getElementById('devicesList');
@@ -836,6 +863,9 @@ geotab.addin.digitalMatterDeviceManager = function () {
             const recoveryButtonText = isInRecoveryMode ? 'Cancel Recovery Mode' : 'Activate Recovery Mode';
             const recoveryButtonClass = isInRecoveryMode ? 'btn-danger' : 'btn-warning';
             
+            // Format last communication date
+            const lastCommsFormatted = formatLastCommsDate(device.lastCommsUTC);
+            
             return `
                 <div class="device-card mb-3">
                     <div class="card">
@@ -846,11 +876,14 @@ geotab.addin.digitalMatterDeviceManager = function () {
                                     <p class="card-text text-muted mb-1">
                                         <small>Serial: ${device.serialNumber}</small>
                                     </p>
-                                    <p class="card-text text-muted mb-0">
+                                    <p class="card-text text-muted mb-1">
                                         <small>Geotab Serial: ${device.geotabSerial || 'N/A'}</small>
                                     </p>
-                                    <p class="card-text text-muted mb-0">
+                                    <p class="card-text text-muted mb-1">
                                         <small>Type: ${formatDeviceTypeForDisplay(device.deviceType) || 'Unknown'}</small>
+                                    </p>
+                                    <p class="card-text text-muted mb-0">
+                                        <small><i class="fas fa-clock me-1"></i>Last Communication: ${lastCommsFormatted}</small>
                                     </p>
                                 </div>
                                 <div class="col-md-2 text-center">
@@ -1035,7 +1068,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Download filtered devices as CSV
+     * Download filtered devices as CSV - Updated to include Last Communication Date
      */
     function downloadCSV() {
         if (filteredDevices.length === 0) {
@@ -1044,12 +1077,13 @@ geotab.addin.digitalMatterDeviceManager = function () {
         }
         
         // CSV headers
-        const headers = ['Name', 'Serial', 'Geotab Serial', 'Battery Percentage', 'Mode', 'Device Type'];
+        const headers = ['Name', 'Serial', 'Geotab Serial', 'Battery Percentage', 'Mode', 'Device Type', 'Last Communication'];
         
         // Convert filtered devices to CSV rows
         const csvRows = filteredDevices.map(device => {
             const mode = device.recoveryModeStatus === true ? 'Recovery Mode' : 'Normal Mode';
             const batteryPercentage = device.batteryPercentage !== null ? device.batteryPercentage + '%' : 'N/A';
+            const lastComms = formatLastCommsDate(device.lastCommsUTC);
             
             return [
                 device.geotabName || 'Unknown Device',
@@ -1057,7 +1091,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 device.geotabSerial || 'N/A',
                 batteryPercentage,
                 mode,
-                formatDeviceTypeForDisplay(device.deviceType) || 'Unknown'
+                formatDeviceTypeForDisplay(device.deviceType) || 'Unknown',
+                lastComms
             ].map(field => `"${field}"`).join(',');
         });
         
