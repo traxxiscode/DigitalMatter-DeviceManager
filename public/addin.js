@@ -674,7 +674,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Format UTC datetime to local readable format
+     * Format UTC datetime to EST readable format
      */
     function formatLastCommsDate(utcDateString) {
         if (!utcDateString) return 'N/A';
@@ -684,8 +684,9 @@ geotab.addin.digitalMatterDeviceManager = function () {
             const utcString = utcDateString.endsWith("Z") ? utcDateString : utcDateString + "Z";
             const date = new Date(utcString);
             
-            // Format to local time with readable format
-            return date.toLocaleString('en-US', {
+            // Format to EST time with readable format
+            const formatted = date.toLocaleString('en-US', {
+                timeZone: 'America/New_York',
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -693,6 +694,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 minute: '2-digit',
                 hour12: true
             });
+            
+            return `${formatted} EST`;
         } catch (error) {
             console.warn('Error formatting date:', error);
             return 'Invalid Date';
