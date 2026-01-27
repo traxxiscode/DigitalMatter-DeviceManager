@@ -34,7 +34,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
         "reynolds_fence": "Reynolds Fence",
         "traxxisdemo": "Traxxis Demo",
         "casttrans": "CAST Transportation",
-        "jbltransport": "JBL Transportation"
+        "jbltransport": "JBL Transportation",
+        "howardsmechanical": "Howards Mechanical"
     };
 
     // Parameter descriptions from the provided paste
