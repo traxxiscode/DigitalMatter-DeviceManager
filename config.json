@@ -1,0 +1,15 @@
+{
+    "name": "Digital Matter Device Manager",
+    "supportEmail": "parker@traxxisgps.com",
+    "version": "1.0",
+    "items": [
+        {
+            "url": "https://traxxiscode.github.io/DigitalMatter-DeviceManager/public/index.html",
+            "category": "AddIns",
+            "menuName": {
+                "en": "Digital Matter Device Manager"
+            }
+        }
+    ],
+    "isSigned": false
+}
