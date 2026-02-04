@@ -36,7 +36,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         "casttrans": "CAST Transportation",
         "jbltransport": "JBL Transportation",
         "howardsmechanical": "Howards Mechanical",
-        "HDXutility": "HDX Utility"
+        "hdxutility": "HDX Utility"
     };
 
     // Parameter descriptions from the provided paste
