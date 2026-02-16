@@ -5,8 +5,6 @@
 geotab.addin.digitalMatterDeviceManager = function () {
     'use strict';
 
-    console.log('Firebase initialized with config:', firebaseConfig);
-
     // State management
     let api;
     let state;
