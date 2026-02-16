@@ -5,6 +5,9 @@
 geotab.addin.digitalMatterDeviceManager = function () {
     'use strict';
 
+    console.log('Firebase initialized with config:', firebaseConfig);
+
+    // State management
     let api;
     let state;
     let elAddin;
@@ -331,6 +334,141 @@ geotab.addin.digitalMatterDeviceManager = function () {
         '33': 'Remora',
         '96': 'Remora34G'
     };
+
+    // Firestore collections
+    const DEVICES_COLLECTION = 'digital_matter_devices';
+
+    /**
+     * Save devices to Firestore
+     */
+    async function saveDevicesToFirestore(devices, database) {
+        try {
+            const docRef = db.collection(DEVICES_COLLECTION).doc(database);
+            await docRef.set({
+                devices: devices,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                database: database
+            });
+            console.log('Devices saved to Firestore successfully');
+        } catch (error) {
+            console.error('Error saving to Firestore:', error);
+        }
+    }
+
+    /**
+     * Load devices from Firestore
+     */
+    async function loadDevicesFromFirestore(database) {
+        try {
+            const docRef = db.collection(DEVICES_COLLECTION).doc(database);
+            const doc = await docRef.get();
+            
+            if (doc.exists) {
+                const data = doc.data();
+                console.log('Devices loaded from Firestore');
+                return {
+                    devices: data.devices || [],
+                    lastUpdated: data.lastUpdated
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('Error loading from Firestore:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Disable/enable action buttons during background refresh
+     */
+    function disableActionButtons(disable) {
+        const buttons = document.querySelectorAll('[onclick*="viewDeviceParameters"], [onclick*="viewRecoveryMode"]');
+        buttons.forEach(btn => {
+            btn.disabled = disable;
+            if (disable) {
+                btn.title = 'Refreshing data... Please wait';
+                btn.classList.add('disabled');
+            } else {
+                btn.title = '';
+                btn.classList.remove('disabled');
+            }
+        });
+    }
+
+    /**
+     * Load fresh device data and save to Firestore
+     */
+    async function loadFreshDeviceData(currentDatabase) {
+        await loadDigitalMatterDevices();
+        
+        if (digitalMatterDevices.length === 0) {
+            showEmptyState();
+            return;
+        }
+        
+        await enrichWithGeotabSerials();
+        console.log('Geotab Serials have been loaded');
+        
+        await loadAndEnrichWithGeotabData();
+        
+        const devicesWithGeotabMatch = digitalMatterDevices.filter(d => d.geotabName);
+        if (devicesWithGeotabMatch.length === 0) {
+            showEmptyState();
+            return;
+        }
+        
+        digitalMatterDevices = devicesWithGeotabMatch;
+        showAlert(`Final count: ${digitalMatterDevices.length} matched devices`, 'success');
+        console.log('Geotab data has been loaded and filtered');
+        
+        await enrichWithBatteryData();
+        console.log('Battery data has been loaded');
+        
+        await enrichWithSystemParameters();
+        console.log('System parameters have been loaded');
+        
+        await enrichWithRecoveryModeQueues();
+        console.log('Recovery mode queues have been loaded');
+        
+        // Save to Firestore
+        await saveDevicesToFirestore(digitalMatterDevices, currentDatabase);
+        
+        populateDeviceTypeFilter();
+        filteredDevices = [...digitalMatterDevices];
+        applyFiltersAndSort();
+        
+        showAlert(`Loaded ${digitalMatterDevices.length} devices successfully`, 'success');
+    }
+
+    /**
+     * Refresh device data in background
+     */
+    async function refreshDeviceDataInBackground(currentDatabase) {
+        // Show updating state on refresh button
+        const btn = document.getElementById('refreshDevicesBtn');
+        let originalHtml;
+        if (btn) {
+            originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="btn-text">Updating...</span>';
+            btn.disabled = true;
+        }
+        
+        try {
+            await loadFreshDeviceData(currentDatabase);
+            disableActionButtons(false);
+            showAlert('Device data refreshed successfully', 'success');
+        } catch (error) {
+            console.error('Error refreshing device data:', error);
+            showAlert('Error refreshing data: ' + error.message, 'warning');
+            disableActionButtons(false);
+        } finally {
+            // Restore button state
+            if (btn) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+    }
 
     function getCurrentGeotabDatabase() {
         return new Promise((resolve, reject) => {
@@ -741,71 +879,52 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Load all device data - Modified to include user clearance check
+     * Load all device data - Modified to use Firestore caching
      */
     async function loadAllDeviceData() {
         try {
             // Check user clearance first
             userHasClearance = await checkUserClearance();
             
-            if (!userHasClearance ) {
+            if (!userHasClearance) {
                 console.log('User does not have required security clearance, buttons will be disabled.');
-            }
-            else {
+            } else {
                 console.log('User has required security clearance, proceeding to load data.');
             }
             
-            // Step 1: Load Digital Matter devices (now filtered by client)
-            await loadDigitalMatterDevices();
-
-            console.log('Devices have been loaded')
-            
-            if (digitalMatterDevices.length === 0) {
-                showEmptyState();
-                return;
+            // Get current database
+            const currentDatabase = await getCurrentGeotabDatabase();
+            if (!currentDatabase) {
+                throw new Error('Could not determine current Geotab database');
             }
             
-            // Step 2: Get Geotab serials (only for filtered devices)
-            await enrichWithGeotabSerials();
-
-            console.log('Geotab Serials have been loaded')
+            // Try to load from Firestore first
+            const cachedData = await loadDevicesFromFirestore(currentDatabase);
             
-            // Step 3: Load Geotab devices and enrich (renamed function)
-            await loadAndEnrichWithGeotabData();
-            
-            // Filter out devices without Geotab matches
-            const devicesWithGeotabMatch = digitalMatterDevices.filter(d => d.geotabName);
-            if (devicesWithGeotabMatch.length === 0) {
-                showEmptyState();
-                return;
+            if (cachedData && cachedData.devices.length > 0) {
+                // Show cached devices immediately
+                digitalMatterDevices = cachedData.devices;
+                filteredDevices = [...digitalMatterDevices];
+                populateDeviceTypeFilter();
+                applyFiltersAndSort();
+                
+                const lastUpdate = cachedData.lastUpdated ? 
+                    new Date(cachedData.lastUpdated.seconds * 1000).toLocaleString() : 
+                    'Unknown';
+                showAlert(`Showing cached data (last updated: ${lastUpdate}). Refreshing in background...`, 'info');
+                
+                // Disable parameter and recovery mode buttons during refresh
+                disableActionButtons(true);
+                
+                // Update in background
+                setTimeout(() => {
+                    refreshDeviceDataInBackground(currentDatabase);
+                }, 500);
+            } else {
+                // No cache, load fresh data
+                showAlert('No cached data found. Loading devices...', 'info');
+                await loadFreshDeviceData(currentDatabase);
             }
-            
-            digitalMatterDevices = devicesWithGeotabMatch;
-            showAlert(`Final count: ${digitalMatterDevices.length} matched devices`, 'success');
-
-            console.log('Geotab data has been loaded and filtered')
-            
-            // Step 4: Get battery data
-            await enrichWithBatteryData();
-
-            console.log('Battery data has been loaded')
-            
-            // Step 5: Get system parameters
-            await enrichWithSystemParameters();
-
-            console.log('System parameters have been loaded')
-            
-            // Step 6: Get recovery mode queues
-            await enrichWithRecoveryModeQueues();
-
-            console.log('Recovery mode queues have been loaded')
-            
-            // Step 7: Populate filter options
-            populateDeviceTypeFilter();
-            
-            // Step 8: Apply initial filters and render devices
-            filteredDevices = [...digitalMatterDevices];
-            applyFiltersAndSort();
             
         } catch (error) {
             console.error('Error loading device data:', error);
@@ -2226,7 +2345,6 @@ geotab.addin.digitalMatterDeviceManager = function () {
      * Refresh devices data
      */
     window.refreshDevices = async function() {
-        // Show loading on refresh button if present
         const btn = document.getElementById('refreshDevicesBtn');
         let originalHtml;
         if (btn) {
@@ -2234,12 +2352,17 @@ geotab.addin.digitalMatterDeviceManager = function () {
             btn.innerHTML = btn.getAttribute('data-loading-text') || originalHtml;
             btn.disabled = true;
         }
-        digitalMatterDevices = [];
-        filteredDevices = [];
-        await loadAllDeviceData();
-        if (btn) {
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
+        
+        try {
+            const currentDatabase = await getCurrentGeotabDatabase();
+            digitalMatterDevices = [];
+            filteredDevices = [];
+            await loadFreshDeviceData(currentDatabase);
+        } finally {
+            if (btn) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
         }
     };
 

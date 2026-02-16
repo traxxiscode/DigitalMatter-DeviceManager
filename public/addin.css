@@ -1,11 +1,11 @@
 /* Digital Matter Device Manager - Custom Styles */
 
 :root {
-    --primary-orange: #FF6B35;
-    --primary-blue: #004E89;
-    --light-orange: #FFB5A0;
-    --light-blue: #1A6FA0;
-    --dark-blue: #003366;
+    --primary-orange: #FF5E00;
+    --primary-blue: #0C1E42;
+    --light-orange: #FF8C42;
+    --light-blue: #1A3A6B;
+    --dark-blue: #060F21;
 }
 
 /* Base Styles */
@@ -24,7 +24,7 @@ body {
 }
 
 .company-logo {
-    height: 42px;
+    height: 68px;
     width: auto;
     display: block;
 }
@@ -92,7 +92,7 @@ body {
     }
     
     .company-logo {
-        height: 36px;
+        height: 56px;
     }
     
     .header-content {
@@ -127,7 +127,7 @@ body {
     }
     
     .company-logo {
-        height: 32px;
+        height: 48px;
     }
     
     .header-content {
@@ -1021,4 +1021,17 @@ body.status-bar-active .header-section {
 .btn-success:hover {
     background-color: #157347;
     border-color: #146c43;
+}
+
+/* Disabled action buttons during refresh */
+.btn.disabled,
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
 }
