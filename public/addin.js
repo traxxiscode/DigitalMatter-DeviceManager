@@ -712,6 +712,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             });
             
             showAlert(`Enriched ${enrichedCount} devices with Geotab information`, 'success');
+            console.log(`Enriched ${enrichedCount} devices with Geotab data`, digitalMatterDevices);
             
         } catch (error) {
             console.error('Error loading Geotab devices:', error);
