@@ -641,6 +641,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     systemParameters: null,
                     deviceType: null
                 }));
+
+                console.log(`Found ${digitalMatterDevices.length} devices for client ${currentClient}:`, digitalMatterDevices);
                 
                 showAlert(`Found ${digitalMatterDevices.length} Digital Matter devices for ${currentClient}`, 'success');
                 return digitalMatterDevices;
