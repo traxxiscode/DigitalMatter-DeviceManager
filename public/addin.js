@@ -642,7 +642,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                     deviceType: null
                 }));
 
-                console.log(`Found ${digitalMatterDevices.length} devices for client ${currentClient}:`, digitalMatterDevices);
+                //console.log(`Found ${digitalMatterDevices.length} devices for client ${currentClient}:`, digitalMatterDevices);
                 
                 showAlert(`Found ${digitalMatterDevices.length} Digital Matter devices for ${currentClient}`, 'success');
                 return digitalMatterDevices;
@@ -683,7 +683,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         }
         
         const devicesWithGeotab = digitalMatterDevices.filter(d => d.geotabSerial);
-        console.log(`Devices with Geotab serials: ${devicesWithGeotab.length}`, devicesWithGeotab);
+        //console.log(`Devices with Geotab serials: ${devicesWithGeotab.length}`, devicesWithGeotab);
         showAlert(`Matched ${devicesWithGeotab.length} devices with Geotab serials`, 'success');
     }
 
@@ -712,7 +712,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             });
             
             showAlert(`Enriched ${enrichedCount} devices with Geotab information`, 'success');
-            console.log(`Enriched ${enrichedCount} devices with Geotab data`, digitalMatterDevices);
+            //console.log(`Enriched ${enrichedCount} devices with Geotab data`, digitalMatterDevices);
             
         } catch (error) {
             console.error('Error loading Geotab devices:', error);
