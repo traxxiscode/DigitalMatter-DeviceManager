@@ -683,6 +683,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         }
         
         const devicesWithGeotab = digitalMatterDevices.filter(d => d.geotabSerial);
+        console.log(`Devices with Geotab serials: ${devicesWithGeotab.length}`, devicesWithGeotab);
         showAlert(`Matched ${devicesWithGeotab.length} devices with Geotab serials`, 'success');
     }
 
