@@ -341,6 +341,18 @@ geotab.addin.digitalMatterDeviceManager = function () {
      */
     async function saveDevicesToFirestore(devices, database) {
         try {
+            await new Promise((resolve, reject) => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        resolve(user);
+                    } else {
+                        firebase.auth().signInAnonymously()
+                            .then(resolve)
+                            .catch(reject);
+                    }
+                });
+            });
+
             const docRef = db.collection(DEVICES_COLLECTION).doc(database);
             await docRef.set({
                 devices: devices,
@@ -358,6 +370,18 @@ geotab.addin.digitalMatterDeviceManager = function () {
      */
     async function loadDevicesFromFirestore(database) {
         try {
+            await new Promise((resolve, reject) => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (user) {
+                        resolve(user);
+                    } else {
+                        firebase.auth().signInAnonymously()
+                            .then(resolve)
+                            .catch(reject);
+                    }
+                });
+            });
+
             const docRef = db.collection(DEVICES_COLLECTION).doc(database);
             const doc = await docRef.get();
             
