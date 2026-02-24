@@ -25,7 +25,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         "decimacorp": "Decima Corp",
         "pavlovmedia": "Pavlov Media",
         "rnwbl": "RNWBL",
-        "aitransport": "Spartan Carrier Group",
+        "spartancarrier": "Spartan Carrier Group",
         "dataone": "Data One",
         "pumpman": "Pumpman Phoenix",
         "erling_sales_and_service": "Erling Sales and Service",
