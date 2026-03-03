@@ -203,6 +203,20 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 'fDisableMoveLogs': '1' // Only applies to YabbyEdge
             }
         },
+        '2-daily-updates': {
+            name: '2 Daily Updates',
+            description: 'Device checks in twice per day, no movement tracking',
+            settings: {
+                'bPeriodicUploadHrMin': '720',
+                'bTrackingMode': '1', // Will be mapped appropriately per device
+                'bInTripUploadMinSec': '3600',
+                'bInTripLogMinSec': '3600',
+                'fUploadOnStart': '0',
+                'fUploadOnEnd': '0',
+                'fUploadDuring': '0',
+                'fDisableMoveLogs': '1' // Only applies to YabbyEdge
+            }
+        },
         'start-stop': {
             name: 'Start + Stop',
             description: 'Tracks trip start and end points only',
@@ -1528,6 +1542,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                                     onchange="handleTemplateChange(this)">
                                 <option value="custom">Custom - Configure each parameter individually</option>
                                 <option value="daily-update">Daily Update - Device checks in once per day, no movement tracking</option>
+                                <option value="2-daily-updates">2 Daily Updates - Device checks in twice per day, no movement tracking</option>
                                 <option value="start-stop">Start + Stop - Tracks trip start and end points only</option>
                                 <option value="movement-tracking">Movement Tracking - Full trip tracking with regular updates</option>
                             </select>
