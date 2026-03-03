@@ -440,7 +440,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         }
         
         digitalMatterDevices = devicesWithGeotabMatch;
-        showAlert(`Final count: ${digitalMatterDevices.length} matched devices`, 'success');
+        //showAlert(`Final count: ${digitalMatterDevices.length} matched devices`, 'success');
         console.log('Geotab data has been loaded and filtered');
         
         await enrichWithBatteryData();
@@ -459,7 +459,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         filteredDevices = [...digitalMatterDevices];
         applyFiltersAndSort();
         
-        showAlert(`Loaded ${digitalMatterDevices.length} devices successfully`, 'success');
+        //showAlert(`Loaded ${digitalMatterDevices.length} devices successfully`, 'success');
     }
 
     /**
@@ -478,10 +478,10 @@ geotab.addin.digitalMatterDeviceManager = function () {
         try {
             await loadFreshDeviceData(currentDatabase);
             disableActionButtons(false);
-            showAlert('Device data refreshed successfully', 'success');
+            //showAlert('Device data refreshed successfully', 'success');
         } catch (error) {
             console.error('Error refreshing device data:', error);
-            showAlert('Error refreshing data: ' + error.message, 'warning');
+            //showAlert('Error refreshing data: ' + error.message, 'warning');
             disableActionButtons(false);
         } finally {
             // Restore button state
@@ -633,7 +633,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
      */
     async function loadDigitalMatterDevices() {
         try {
-            showAlert('Loading Digital Matter devices...', 'info');
+            //showAlert('Loading Digital Matter devices...', 'info');
             
             // Get current Geotab database
             const currentDatabase = await getCurrentGeotabDatabase();
@@ -646,7 +646,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 throw new Error(`No client mapping found for database: ${currentDatabase}`);
             }
             
-            showAlert(`Filtering for client: ${currentClient}`, 'info');
+            //showAlert(`Filtering for client: ${currentClient}`, 'info');
             
             const response = await makeDigitalMatterCall('/TrackingDevice/GetDeviceList');
             
@@ -668,14 +668,14 @@ geotab.addin.digitalMatterDeviceManager = function () {
 
                 //console.log(`Found ${digitalMatterDevices.length} devices for client ${currentClient}:`, digitalMatterDevices);
                 
-                showAlert(`Found ${digitalMatterDevices.length} Digital Matter devices for ${currentClient}`, 'success');
+                //showAlert(`Found ${digitalMatterDevices.length} Digital Matter devices for ${currentClient}`, 'success');
                 return digitalMatterDevices;
             }
             
             throw new Error('No devices found in response');
         } catch (error) {
             console.error('Error loading Digital Matter devices:', error);
-            showAlert('Error loading Digital Matter devices: ' + error.message, 'danger');
+            //showAlert('Error loading Digital Matter devices: ' + error.message, 'danger');
             return [];
         }
     }
@@ -688,7 +688,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             return;
         }
         
-        showAlert('Getting Geotab serials for filtered Digital Matter devices...', 'info');
+        //showAlert('Getting Geotab serials for filtered Digital Matter devices...', 'info');
         
         for (const device of digitalMatterDevices) {
             try {
@@ -708,7 +708,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         
         const devicesWithGeotab = digitalMatterDevices.filter(d => d.geotabSerial);
         //console.log(`Devices with Geotab serials: ${devicesWithGeotab.length}`, devicesWithGeotab);
-        showAlert(`Matched ${devicesWithGeotab.length} devices with Geotab serials`, 'success');
+        //showAlert(`Matched ${devicesWithGeotab.length} devices with Geotab serials`, 'success');
     }
 
     /**
@@ -716,7 +716,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
      */
     async function loadAndEnrichWithGeotabData() {
         try {
-            showAlert('Loading Geotab device information...', 'info');
+            //showAlert('Loading Geotab device information...', 'info');
             geotabDevices = await makeGeotabCall("Get", "Device");
             
             // Enrich Digital Matter devices with Geotab names and IDs
@@ -735,12 +735,12 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 }
             });
             
-            showAlert(`Enriched ${enrichedCount} devices with Geotab information`, 'success');
+            //showAlert(`Enriched ${enrichedCount} devices with Geotab information`, 'success');
             //console.log(`Enriched ${enrichedCount} devices with Geotab data`, digitalMatterDevices);
             
         } catch (error) {
             console.error('Error loading Geotab devices:', error);
-            showAlert('Error loading Geotab devices: ' + error.message, 'danger');
+            //showAlert('Error loading Geotab devices: ' + error.message, 'danger');
         }
     }
 
@@ -748,7 +748,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
      * Get battery percentage and device counters
      */
     async function enrichWithBatteryData() {
-        showAlert('Getting battery levels for devices...', 'info');
+        //showAlert('Getting battery levels for devices...', 'info');
         
         for (const device of digitalMatterDevices) {
             try {
@@ -769,7 +769,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
      * Get system parameters for each device - Enhanced to capture LastCommsUTC
      */
     async function enrichWithSystemParameters() {
-        showAlert('Getting system parameters for devices...', 'info');
+        //showAlert('Getting system parameters for devices...', 'info');
         
         for (const device of digitalMatterDevices) {
             // Determine device type from product ID
@@ -838,7 +838,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         
         const devicesWithParams = digitalMatterDevices.filter(d => d.systemParameters);
         const devicesInRecovery = digitalMatterDevices.filter(d => d.recoveryModeStatus === true);
-        showAlert(`Retrieved parameters for ${devicesWithParams.length} devices (${devicesInRecovery.length} in recovery mode)`, 'success');
+        //showAlert(`Retrieved parameters for ${devicesWithParams.length} devices (${devicesInRecovery.length} in recovery mode)`, 'success');
     }
 
     /**
@@ -882,7 +882,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
      * Get recovery mode queues for each device
      */
     async function enrichWithRecoveryModeQueues() {
-        showAlert('Getting recovery mode queues for devices...', 'info');
+        //showAlert('Getting recovery mode queues for devices...', 'info');
         
         for (const device of digitalMatterDevices) {
             try {
@@ -901,7 +901,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         }
         
         const devicesWithQueues = digitalMatterDevices.filter(d => d.recoveryModeQueues && d.recoveryModeQueues.length > 0);
-        showAlert(`Retrieved recovery mode queues for ${digitalMatterDevices.length} devices (${devicesWithQueues.length} have active queues)`, 'success');
+        //showAlert(`Retrieved recovery mode queues for ${digitalMatterDevices.length} devices (${devicesWithQueues.length} have active queues)`, 'success');
     }
 
     /**
@@ -937,7 +937,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 const lastUpdate = cachedData.lastUpdated ? 
                     new Date(cachedData.lastUpdated.seconds * 1000).toLocaleString() : 
                     'Unknown';
-                showAlert(`Showing cached data (last updated: ${lastUpdate}). Refreshing in background...`, 'info');
+                //showAlert(`Showing cached data (last updated: ${lastUpdate}). Refreshing in background...`, 'info');
                 
                 // Disable parameter and recovery mode buttons during refresh
                 disableActionButtons(true);
@@ -948,13 +948,13 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 }, 500);
             } else {
                 // No cache, load fresh data
-                showAlert('No cached data found. Loading devices...', 'info');
+                //showAlert('No cached data found. Loading devices...', 'info');
                 await loadFreshDeviceData(currentDatabase);
             }
             
         } catch (error) {
             console.error('Error loading device data:', error);
-            showAlert('Error loading device data: ' + error.message, 'danger');
+            ////showAlert('Error loading device data: ' + error.message, 'danger');
             showEmptyState();
         }
     }
@@ -1224,7 +1224,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
      */
     function downloadCSV() {
         if (filteredDevices.length === 0) {
-            showAlert('No devices to export', 'warning');
+            //showAlert('No devices to export', 'warning');
             return;
         }
         
@@ -1268,7 +1268,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         link.click();
         document.body.removeChild(link);
         
-        showAlert(`Exported ${filteredDevices.length} devices to CSV`, 'success');
+        //showAlert(`Exported ${filteredDevices.length} devices to CSV`, 'success');
     }
 
     /**
@@ -1329,7 +1329,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     window.viewDeviceParameters = function(serialNumber) {
         const device = digitalMatterDevices.find(d => d.serialNumber === serialNumber);
         if (!device || !device.systemParameters) {
-            showAlert('No parameters available for this device', 'warning');
+            //showAlert('No parameters available for this device', 'warning');
             return;
         }
         
@@ -1469,7 +1469,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
         // Get parameter descriptions for this device type
         const deviceTypeParams = PARAMETER_DESCRIPTIONS[device.deviceType];
         if (!deviceTypeParams) {
-            showAlert(`No parameter definitions found for device type: ${device.deviceType}`, 'warning');
+            //showAlert(`No parameter definitions found for device type: ${device.deviceType}`, 'warning');
             return;
         }
         
@@ -2179,12 +2179,12 @@ geotab.addin.digitalMatterDeviceManager = function () {
         
         const changedInputs = paramsContainer.querySelectorAll('.parameter-input.changed');
         if (changedInputs.length === 0) {
-            showAlert('No changes detected', 'info');
+            //showAlert('No changes detected', 'info');
             return;
         }
         
         try {
-            showAlert('Saving device parameters...', 'info');
+            //showAlert('Saving device parameters...', 'info');
             
             // Disable save button during save
             const saveButton = document.getElementById(`save-${device.serialNumber}`);
@@ -2458,7 +2458,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
     window.viewRecoveryMode = async function(serialNumber) {
         const device = digitalMatterDevices.find(d => d.serialNumber === serialNumber);
         if (!device) {
-            showAlert('Device not found', 'danger');
+            //showAlert('Device not found', 'danger');
             return;
         }
         
@@ -2747,7 +2747,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             btn.disabled = true;
         }
         try {
-            showAlert('Cancelling current recovery mode...', 'info');
+            //showAlert('Cancelling current recovery mode...', 'info');
             
             // Create expiry date 1 year from now
             const expiryDate = new Date();
@@ -2762,7 +2762,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
             await makeDigitalMatterCall(`/AsyncMessaging/Send?serial=${serialNumber}`, 'POST', requestBody);
             
-            showAlert('Recovery mode cancelled successfully!', 'success');
+            //showAlert('Recovery mode cancelled successfully!', 'success');
             
             // Update the device's recovery mode status and queues
             const device = digitalMatterDevices.find(d => d.serialNumber === serialNumber);
@@ -2802,7 +2802,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
         } catch (error) {
             console.error('Error cancelling current recovery mode:', error);
-            showAlert('Error cancelling recovery mode: ' + error.message, 'danger');
+            //showAlert('Error cancelling recovery mode: ' + error.message, 'danger');
         } finally {
             if (btn) {
                 btn.innerHTML = originalHtml;
@@ -2827,13 +2827,13 @@ geotab.addin.digitalMatterDeviceManager = function () {
             // Get the expiry date from the input
             const expiryInput = document.getElementById(`expiryDate-${serialNumber}`);
             if (!expiryInput) {
-                showAlert('Error: Could not find expiration date input', 'danger');
+                //showAlert('Error: Could not find expiration date input', 'danger');
                 return;
             }
             
             const expiryValue = expiryInput.value;
             if (!expiryValue) {
-                showAlert('Please select an expiration date and time', 'warning');
+                //showAlert('Please select an expiration date and time', 'warning');
                 return;
             }
             
@@ -2842,11 +2842,11 @@ geotab.addin.digitalMatterDeviceManager = function () {
             const now = new Date();
             
             if (expiryDate <= now) {
-                showAlert('Expiration date must be in the future', 'warning');
+                //showAlert('Expiration date must be in the future', 'warning');
                 return;
             }
             
-            showAlert('Triggering recovery mode...', 'info');
+            //showAlert('Triggering recovery mode...', 'info');
             
             // Pass the expiry date to the API call
             const requestBody = {
@@ -2858,7 +2858,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
             await makeDigitalMatterCall(`/AsyncMessaging/Send?serial=${serialNumber}`, 'POST', requestBody);
             
-            showAlert(`Recovery mode triggered successfully! Expires: ${expiryDate.toLocaleString()}`, 'success');
+            //showAlert(`Recovery mode triggered successfully! Expires: ${expiryDate.toLocaleString()}`, 'success');
             
             // Update the device's recovery mode status and queues
             const device = digitalMatterDevices.find(d => d.serialNumber === serialNumber);
@@ -2898,7 +2898,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
         } catch (error) {
             console.error('Error triggering recovery mode:', error);
-            showAlert('Error triggering recovery mode: ' + error.message, 'danger');
+            //showAlert('Error triggering recovery mode: ' + error.message, 'danger');
         } finally {
             if (btn) {
                 btn.innerHTML = originalHtml;
@@ -2920,11 +2920,11 @@ geotab.addin.digitalMatterDeviceManager = function () {
             btn.disabled = true;
         }
         try {
-            showAlert('Cancelling recovery mode queue...', 'info');
+            //showAlert('Cancelling recovery mode queue...', 'info');
             
             await makeDigitalMatterCall(`/AsyncMessaging/Cancel?serial=${serialNumber}&id=${messageId}`);
             
-            showAlert('Recovery mode queue cancelled successfully!', 'success');
+            //showAlert('Recovery mode queue cancelled successfully!', 'success');
             
             // Update the device's recovery mode queues
             const device = digitalMatterDevices.find(d => d.serialNumber === serialNumber);
@@ -2951,7 +2951,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
             
         } catch (error) {
             console.error('Error cancelling recovery mode:', error);
-            showAlert('Error cancelling recovery mode: ' + error.message, 'danger');
+            //showAlert('Error cancelling recovery mode: ' + error.message, 'danger');
         } finally {
             if (btn) {
                 btn.innerHTML = originalHtml;
