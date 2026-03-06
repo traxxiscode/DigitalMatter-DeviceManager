@@ -5,30 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Matter Device Manager</title>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
     <link href="addin.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Main Add-in Container -->
     <div id="digitalMatterDeviceManager">
-        <!-- Header Section -->
+        <!-- Header -->
         <div class="header-section">
             <div class="container-fluid">
                 <div class="row align-items-center">
                     <div class="col-auto">
-                        <img src="https://cdn.baseline.is/static/content/logos/EUeno4LYG6xp8HQjmevQvj-lala.svg" 
-                            alt="Company Logo" class="company-logo">
+                        <img src="https://cdn.baseline.is/static/content/logos/mDtvptChQ3XwBLuxuu5hip-lala.svg"
+                             alt="Logo" class="company-logo"
+                             onerror="this.style.display='none';">
                     </div>
                     <div class="col">
                         <div class="header-content">
                             <h1 class="header-title">Digital Matter Device Manager</h1>
-                            <p class="header-subtitle">Manage and configure your Digital Matter tracking devices</p>
                         </div>
                     </div>
                     <div class="col-auto">
@@ -118,7 +112,6 @@
 
             <!-- Devices List -->
             <div id="devicesList">
-                <!-- Loading State -->
                 <div class="text-center py-5">
                     <div class="spinner-border loading-spinner" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -129,7 +122,6 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -148,7 +140,6 @@
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     </script>
-    <!-- Your existing JavaScript will be loaded here -->
     <script src="addin.js"></script>
 </body>
 </html>
