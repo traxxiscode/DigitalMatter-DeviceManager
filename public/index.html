@@ -18,29 +18,14 @@
     <!-- Main Add-in Container -->
     <div id="digitalMatterDeviceManager">
         <!-- Header Section -->
-        <div class="header-section">
-            <div class="container-fluid">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <img src="https://cdn.baseline.is/static/content/logos/mDtvptChQ3XwBLuxuu5hip-lala.svg" 
-                            alt="Company Logo" class="company-logo">
-                    </div>
-                    <div class="col">
-                        <div class="header-content">
-                            <h1 class="header-title">Digital Matter Device Manager</h1>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-header-action"
-                                id="refreshDevicesBtn"
-                                data-loading-text='<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...'
-                                onclick="refreshDevices()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span class="btn-text">Refresh</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <div data-suite-actions style="display:none;">
+            <button class="btn btn-header-action"
+                    id="refreshDevicesBtn"
+                    data-loading-text='<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...'
+                    onclick="refreshDevices()">
+                <i class="fas fa-sync-alt"></i>
+                <span class="btn-text">Refresh</span>
+            </button>
         </div>
 
         <!-- Alert Container -->
