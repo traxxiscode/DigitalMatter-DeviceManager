@@ -4,48 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Matter Device Manager</title>
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
     <link href="addin.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Main Add-in Container -->
-    <div id="digitalMatterDeviceManager">
-        <!-- Header Section -->
-        <div class="header-section">
-            <div class="container-fluid">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <img src="https://cdn.baseline.is/static/content/logos/mDtvptChQ3XwBLuxuu5hip-lala.svg" 
-                            alt="Company Logo" class="company-logo">
-                    </div>
-                    <div class="col">
-                        <div class="header-content">
-                            <h1 class="header-title">Digital Matter Device Manager</h1>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-header-action"
-                                id="refreshDevicesBtn"
-                                data-loading-text='<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...'
-                                onclick="refreshDevices()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span class="btn-text">Refresh</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="digitalMatterDeviceManager" style="display:none;">
 
-        <!-- Alert Container -->
-        <div class="container-fluid">
-            <div id="alertContainer"></div>
+        <!-- Header actions injected into the Geotab dashboard header -->
+        <div data-suite-actions style="display:none;">
+            <button class="btn btn-header-action btn-loading" id="refreshDevicesBtn" onclick="refreshDevices()">
+                <span class="btn-text" style="display:inline-flex;align-items:center;">
+                    <i class="fas fa-sync-alt me-2"></i><span class="btn-label">Refresh</span>
+                </span>
+                <span class="btn-loading-text" style="display:none;">
+                    <span class="spinner-border spinner-border-sm me-1" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </span>
+                    Loading...
+                </span>
+            </button>
         </div>
 
         <!-- Controls Section -->
@@ -58,9 +36,9 @@
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
                             </span>
-                            <input type="text" 
-                                   class="form-control search-input border-start-0" 
-                                   id="deviceSearch" 
+                            <input type="text"
+                                   class="form-control search-input border-start-0"
+                                   id="deviceSearch"
                                    placeholder="Search by device name, serial number, or Geotab serial...">
                         </div>
                     </div>
@@ -117,7 +95,6 @@
 
             <!-- Devices List -->
             <div id="devicesList">
-                <!-- Loading State -->
                 <div class="text-center py-5">
                     <div class="spinner-border loading-spinner" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -126,9 +103,9 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bootstrap JS -->
+    </div><!-- /#digitalMatterDeviceManager -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -147,7 +124,6 @@
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     </script>
-    <!-- Your existing JavaScript will be loaded here -->
     <script src="addin.js"></script>
 </body>
 </html>

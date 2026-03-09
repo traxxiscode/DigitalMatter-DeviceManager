@@ -480,29 +480,15 @@ geotab.addin.digitalMatterDeviceManager = function () {
      * Refresh device data in background
      */
     async function refreshDeviceDataInBackground(currentDatabase) {
-        // Show updating state on refresh button
-        const btn = document.getElementById('refreshDevicesBtn');
-        let originalHtml;
-        if (btn) {
-            originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="btn-text">Updating...</span>';
-            btn.disabled = true;
-        }
-        
+        setButtonLoading('refreshDevicesBtn', true);
         try {
             await loadFreshDeviceData(currentDatabase);
             disableActionButtons(false);
-            //showAlert('Device data refreshed successfully', 'success');
         } catch (error) {
             console.error('Error refreshing device data:', error);
-            //showAlert('Error refreshing data: ' + error.message, 'warning');
             disableActionButtons(false);
         } finally {
-            // Restore button state
-            if (btn) {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
+            setButtonLoading('refreshDevicesBtn', false);
         }
     }
 
@@ -2284,64 +2270,42 @@ geotab.addin.digitalMatterDeviceManager = function () {
     /**
      * Show status bar notification (replaces toast system)
      */
-    function showAlert(message, type = 'info') {
-        // Remove existing status bar if present
-        const existingBar = document.querySelector('.status-bar');
-        if (existingBar) {
-            hideStatusBar();
-        }
-        
-        const iconMap = {
-            'success': 'check-circle',
-            'danger': 'exclamation-triangle',
-            'warning': 'exclamation-triangle',
-            'info': 'info-circle'
-        };
-        
-        const statusBarHtml = `
-            <div class="status-bar status-${type}" id="statusBar">
-                <div class="status-bar-content">
-                    <i class="fas fa-${iconMap[type]}"></i>
-                    <span>${message}</span>
-                </div>
-                <button class="status-bar-close" onclick="hideStatusBar()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('afterbegin', statusBarHtml);
-        document.body.classList.add('status-bar-active');
-        
-        // Show with animation
-        setTimeout(() => {
-            const statusBar = document.getElementById('statusBar');
-            if (statusBar) {
-                statusBar.classList.add('show');
-            }
-        }, 10);
-        
-        // Auto-hide after 4 seconds for non-error messages
-        if (type !== 'danger') {
-            setTimeout(() => {
-                hideStatusBar();
-            }, 4000);
+    /**
+     * Show/hide button loading state
+     */
+    function setButtonLoading(buttonId, loading = true) {
+        const button = document.getElementById(buttonId);
+        if (!button) return;
+
+        const btnText = button.querySelector('.btn-text');
+        const btnLoadingText = button.querySelector('.btn-loading-text');
+
+        if (loading) {
+            button.disabled = true;
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoadingText) btnLoadingText.style.display = 'inline-flex';
+        } else {
+            button.disabled = false;
+            if (btnText) btnText.style.display = 'inline-flex';
+            if (btnLoadingText) btnLoadingText.style.display = 'none';
         }
     }
 
     /**
-     * Hide status bar
+     * Log messages (alerts removed from UI)
      */
-    window.hideStatusBar = function() {
-        const statusBar = document.querySelector('.status-bar');
-        if (statusBar) {
-            statusBar.classList.remove('show');
-            setTimeout(() => {
-                statusBar.remove();
-                document.body.classList.remove('status-bar-active');
-            }, 300);
+    function showAlert(message, type = 'info') {
+        if (type === 'danger' || type === 'warning') {
+            console.error(`[${type}] ${message}`);
+        } else {
+            console.log(`[${type}] ${message}`);
         }
-    };
+    }
+
+    /**
+     * Hide status bar (no-op, kept for any remaining references)
+     */
+    window.hideStatusBar = function() {};
 
     /**
      * Show inline parameter status message
@@ -2386,24 +2350,14 @@ geotab.addin.digitalMatterDeviceManager = function () {
      * Refresh devices data
      */
     window.refreshDevices = async function() {
-        const btn = document.getElementById('refreshDevicesBtn');
-        let originalHtml;
-        if (btn) {
-            originalHtml = btn.innerHTML;
-            btn.innerHTML = btn.getAttribute('data-loading-text') || originalHtml;
-            btn.disabled = true;
-        }
-        
+        setButtonLoading('refreshDevicesBtn', true);
         try {
             const currentDatabase = await getCurrentGeotabDatabase();
             digitalMatterDevices = [];
             filteredDevices = [];
             await loadFreshDeviceData(currentDatabase);
         } finally {
-            if (btn) {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
+            setButtonLoading('refreshDevicesBtn', false);
         }
     };
 

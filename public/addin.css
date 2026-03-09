@@ -253,36 +253,6 @@ body {
     opacity: 0.3;
 }
 
-/* Alerts */
-.alert {
-    border: none;
-    border-radius: 8px;
-    border-left: 4px solid;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    border-left-color: #28a745;
-    color: #155724;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    border-left-color: #dc3545;
-    color: #721c24;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    border-left-color: var(--primary-orange);
-    color: #856404;
-}
-
-.alert-info {
-    background-color: #cce7ff;
-    border-left-color: var(--primary-blue);
-    color: #004085;
-}
 
 /* Modal Styles */
 .modal-header {
@@ -451,74 +421,6 @@ body {
     }
 }
 
-/* Status Bar Notification System */
-.status-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1050;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-align: center;
-    transform: translateY(-100%);
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.status-bar.show {
-    transform: translateY(0);
-}
-
-.status-bar.status-success {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-}
-
-.status-bar.status-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
-    color: white;
-}
-
-.status-bar.status-warning {
-    background: linear-gradient(135deg, var(--primary-orange) 0%, #f39c12 100%);
-    color: white;
-}
-
-.status-bar.status-info {
-    background: linear-gradient(135deg, #0C1E42 0%, #0C2853 100%);
-    color: white;
-}
-
-.status-bar-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.status-bar-close {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: inherit;
-    font-size: 1rem;
-    cursor: pointer;
-    opacity: 0.8;
-    padding: 0.25rem;
-    border-radius: 3px;
-    transition: opacity 0.2s ease;
-}
-
-.status-bar-close:hover {
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.1);
-}
-
 /* Inline Parameter Success */
 .param-status-message {
     margin: 1rem 0;
@@ -553,15 +455,6 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-/* Adjust main content when status bar is visible */
-body.status-bar-active {
-    padding-top: 52px;
-}
-
-body.status-bar-active .header-section {
-    margin-top: 0;
 }
 
 /* Enhanced Device Parameters Styling */
