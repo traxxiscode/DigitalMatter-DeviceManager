@@ -149,6 +149,7 @@ body {
     background: white;
     border-radius: 10px;
     padding: 1.5rem;
+    margin-top: 2rem;
     margin-bottom: 2rem;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
     border-left: 4px solid var(--primary-orange);
