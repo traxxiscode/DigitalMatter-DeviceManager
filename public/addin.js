@@ -429,6 +429,21 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 btn.classList.remove('disabled');
             }
         });
+
+        // Also disable/enable the Download Report button
+        const downloadBtn = document.querySelector('[onclick*="downloadCSV"]');
+        if (downloadBtn) {
+            downloadBtn.disabled = disable;
+            if (disable) {
+                downloadBtn.title = 'Refreshing data... Please wait';
+                downloadBtn.classList.remove('btn-success');
+                downloadBtn.classList.add('btn-secondary', 'disabled');
+            } else {
+                downloadBtn.title = '';
+                downloadBtn.classList.remove('btn-secondary', 'disabled');
+                downloadBtn.classList.add('btn-success');
+            }
+        }
     }
 
     /**
@@ -1236,7 +1251,22 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Get the short friendly label for a parameter key (text before the first ' - ').
+     * Extract the unit from a parameter description string.
+     * Looks for a parenthesised unit like "(minutes)" or "(seconds)".
+     * Returns a short abbreviation ("min", "sec") or null if not found.
+     */
+    function extractUnit(description) {
+        const match = description.match(/\(([^)]+)\)/);
+        if (!match) return null;
+        const raw = match[1].toLowerCase();
+        if (raw === 'minutes') return 'min';
+        if (raw === 'seconds') return 'sec';
+        return raw;
+    }
+
+    /**
+     * Get the short friendly label for a parameter key with unit appended where applicable.
+     * e.g. "Heartbeat Interval (min)", "Upload at Trip Start"
      */
     function getParamLabel(deviceType, paramKey) {
         const sections = PARAMETER_DESCRIPTIONS[deviceType];
@@ -1245,7 +1275,9 @@ geotab.addin.digitalMatterDeviceManager = function () {
             if (section.params[paramKey]) {
                 const full = section.params[paramKey];
                 const dashIdx = full.indexOf(' - ');
-                return dashIdx !== -1 ? full.substring(0, dashIdx) : full;
+                const label = dashIdx !== -1 ? full.substring(0, dashIdx) : full;
+                const unit = extractUnit(full);
+                return unit ? label + ' (' + unit + ')' : label;
             }
         }
         return paramKey;
