@@ -1220,55 +1220,142 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
-     * Download filtered devices as CSV - Updated to include Last Communication Date
+     * Get a flat ordered list of parameter keys for a device type,
+     * derived from PARAMETER_DESCRIPTIONS so columns stay consistent per sheet.
+     */
+    function getParamKeysForDeviceType(deviceType) {
+        const sections = PARAMETER_DESCRIPTIONS[deviceType];
+        if (!sections) return [];
+        const keys = [];
+        Object.values(sections).forEach(section => {
+            Object.keys(section.params).forEach(key => {
+                if (!keys.includes(key)) keys.push(key);
+            });
+        });
+        return keys;
+    }
+
+    /**
+     * Get the short friendly label for a parameter key (text before the first ' - ').
+     */
+    function getParamLabel(deviceType, paramKey) {
+        const sections = PARAMETER_DESCRIPTIONS[deviceType];
+        if (!sections) return paramKey;
+        for (const section of Object.values(sections)) {
+            if (section.params[paramKey]) {
+                const full = section.params[paramKey];
+                const dashIdx = full.indexOf(' - ');
+                return dashIdx !== -1 ? full.substring(0, dashIdx) : full;
+            }
+        }
+        return paramKey;
+    }
+
+    /**
+     * Flatten a device's systemParameters object (keyed by section id)
+     * into a simple { paramKey: value } map.
+     */
+    function flattenSystemParams(systemParameters) {
+        if (!systemParameters) return {};
+        const flat = {};
+        Object.values(systemParameters).forEach(section => {
+            if (section && typeof section === 'object') {
+                Object.entries(section).forEach(([key, val]) => {
+                    flat[key] = val;
+                });
+            }
+        });
+        return flat;
+    }
+
+    /**
+     * Download filtered devices as a multi-sheet Excel file (.xlsx).
+     * Each device type gets its own sheet with device info + its specific parameters.
      */
     function downloadCSV() {
         if (filteredDevices.length === 0) {
             //showAlert('No devices to export', 'warning');
             return;
         }
-        
-        // CSV headers
-        const headers = ['Name', 'Serial', 'Geotab Serial', 'Battery Percentage', 'Mode', 'Device Type', 'Last Communication'];
-        
-        // Convert filtered devices to CSV rows
-        const csvRows = filteredDevices.map(device => {
-            const mode = device.recoveryModeStatus === true ? 'Recovery Mode' : 'Normal Mode';
-            const batteryPercentage = device.batteryPercentage !== null ? device.batteryPercentage + '%' : 'N/A';
-            const lastComms = formatLastCommsDate(device.lastCommsUTC);
-            
-            return [
-                device.geotabName || 'Unknown Device',
-                device.serialNumber,
-                device.geotabSerial || 'N/A',
-                batteryPercentage,
-                mode,
-                formatDeviceTypeForDisplay(device.deviceType) || 'Unknown',
-                lastComms
-            ].map(field => `"${field}"`).join(',');
+
+        if (typeof XLSX === 'undefined') {
+            console.error('SheetJS (XLSX) library not loaded');
+            return;
+        }
+
+        // Group filtered devices by device type
+        const byType = {};
+        filteredDevices.forEach(device => {
+            const type = device.deviceType || 'Unknown';
+            if (!byType[type]) byType[type] = [];
+            byType[type].push(device);
         });
-        
-        // Combine headers and rows
-        const csvContent = [headers.join(','), ...csvRows].join('\n');
-        
-        // Add UTF-8 BOM to help Excel recognize the encoding
-        const bom = '\uFEFF';
-        const csvWithBom = bom + csvContent;
-        
-        // Create and download file
-        const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', `digital-matter-devices-${new Date().toISOString().slice(0, 10)}.csv`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        //showAlert(`Exported ${filteredDevices.length} devices to CSV`, 'success');
+
+        const workbook = XLSX.utils.book_new();
+
+        // Sort device types so sheets appear in a predictable order
+        const sortedTypes = Object.keys(byType).sort();
+
+        sortedTypes.forEach(deviceType => {
+            const devices = byType[deviceType];
+            const paramKeys = getParamKeysForDeviceType(deviceType);
+
+            // Build header row: base info columns + one column per parameter
+            const baseHeaders = ['Name', 'Serial', 'Geotab Serial', 'Battery %', 'Mode', 'Device Type', 'Last Communication'];
+            const paramHeaders = paramKeys.map(key => getParamLabel(deviceType, key));
+            const allHeaders = [...baseHeaders, ...paramHeaders];
+
+            // Build data rows
+            const rows = devices.map(device => {
+                const mode = device.recoveryModeStatus === true ? 'Recovery Mode' : 'Normal Mode';
+                const battery = device.batteryPercentage !== null && device.batteryPercentage !== undefined
+                    ? device.batteryPercentage
+                    : 'N/A';
+                const lastComms = formatLastCommsDate(device.lastCommsUTC);
+                const flatParams = flattenSystemParams(device.systemParameters);
+
+                const baseRow = [
+                    device.geotabName || 'Unknown Device',
+                    device.serialNumber,
+                    device.geotabSerial || 'N/A',
+                    battery,
+                    mode,
+                    formatDeviceTypeForDisplay(deviceType),
+                    lastComms
+                ];
+
+                const paramValues = paramKeys.map(key =>
+                    flatParams[key] !== undefined ? flatParams[key] : 'N/A'
+                );
+
+                return [...baseRow, ...paramValues];
+            });
+
+            // Assemble sheet data: header row first, then device rows
+            const sheetData = [allHeaders, ...rows];
+            const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+
+            // Auto-size columns (approximate character widths)
+            const colWidths = allHeaders.map((header, colIdx) => {
+                const maxLen = sheetData.reduce((max, row) => {
+                    const cell = row[colIdx];
+                    const len = cell !== undefined && cell !== null ? String(cell).length : 0;
+                    return Math.max(max, len);
+                }, header.length);
+                return { wch: Math.min(maxLen + 2, 50) };
+            });
+            worksheet['!cols'] = colWidths;
+
+            // Sheet name: use display name, truncated to 31 chars (Excel limit)
+            const sheetName = formatDeviceTypeForDisplay(deviceType).substring(0, 31);
+            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+        });
+
+        // Write and trigger download
+        const filename = `digital-matter-devices-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(workbook, filename);
+
+        //showAlert(`Exported ${filteredDevices.length} devices to Excel`, 'success');
     }
 
     /**
