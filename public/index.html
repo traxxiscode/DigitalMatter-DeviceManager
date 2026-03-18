@@ -11,21 +11,6 @@
 <body>
     <div id="digitalMatterDeviceManager" style="display:none;">
 
-        <!-- Header actions injected into the Geotab dashboard header -->
-        <div data-suite-actions style="display:none;">
-            <button class="btn btn-header-action btn-loading" id="refreshDevicesBtn" onclick="refreshDevices()">
-                <span class="btn-text" style="display:inline-flex;align-items:center;">
-                    <i class="fas fa-sync-alt me-2"></i><span class="btn-label">Refresh</span>
-                </span>
-                <span class="btn-loading-text" style="display:none;">
-                    <span class="spinner-border spinner-border-sm me-1" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </span>
-                    Loading...
-                </span>
-            </button>
-        </div>
-
         <!-- Controls Section -->
         <div class="container-fluid">
             <div class="controls-section">
@@ -85,6 +70,17 @@
                             </select>
                         </div>
                         <div class="col-md-3 text-end">
+                            <button class="btn btn-outline-secondary me-2 btn-loading" id="refreshDevicesBtn" onclick="refreshDevices()">
+                                <span class="btn-text" style="display:inline-flex;align-items:center;">
+                                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                                </span>
+                                <span class="btn-loading-text" style="display:none;">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                    Loading...
+                                </span>
+                            </button>
                             <button class="btn btn-success" onclick="downloadCSV()">
                                 <i class="fas fa-file-excel me-2"></i>Download Report
                             </button>
