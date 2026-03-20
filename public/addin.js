@@ -38,7 +38,8 @@ geotab.addin.digitalMatterDeviceManager = function () {
         "jbltransport": "JBL Transportation",
         "howardsmechanical": "Howards Mechanical",
         "hdxutility": "HDX Utility",
-        "vastrut": "Virginia Strut"
+        "vastrut": "Virginia Strut",
+        "schillerhardware": "Schiller Hardware"
     };
 
     // Parameter descriptions from the provided paste
