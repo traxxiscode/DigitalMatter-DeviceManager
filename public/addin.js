@@ -1302,6 +1302,53 @@ geotab.addin.digitalMatterDeviceManager = function () {
     }
 
     /**
+     * Translate a raw numeric parameter value into its human-readable label,
+     * using the same option sets shown in the UI dropdowns.
+     */
+    function getParamDisplayValue(paramKey, rawValue, deviceType) {
+        if (rawValue === undefined || rawValue === null || rawValue === 'N/A') return 'N/A';
+
+        const val = String(rawValue);
+
+        switch (paramKey) {
+            case 'fGpsPowerMode':
+                return val === '0' ? 'Low Power' : val === '1' ? 'Performance' : val;
+
+            case 'bTrackingMode':
+                if (deviceType === 'YabbyEdge') {
+                    return val === '0' ? 'Movement based' : val === '1' ? 'Periodic Update' : val;
+                } else {
+                    return val === '0' ? 'GPS Movement Trips'
+                         : val === '1' ? 'Jostle Trips'
+                         : val === '2' ? 'Periodic Update'
+                         : val;
+                }
+
+            // Standard Yes/No (1 = Yes, 0 = No)
+            case 'fUploadOnStart':
+            case 'fUploadDuring':
+            case 'fUploadOnEnd':
+            case 'fUploadOnJostle':
+            case 'fAvoidGpsWander':
+            case 'fCellTowerFallback':
+            case 'fPeriodicOnly':
+            case 'fJostleTrips':
+            case 'fEnableMoveUploads':
+            case 'fDisableWakeFilter':
+            case 'fDisableLogFilter':
+                return val === '1' ? 'Yes' : val === '0' ? 'No' : val;
+
+            // Inverted Yes/No (0 = Yes, 1 = No)
+            case 'fNoGpsFreshen':
+            case 'fDisableMoveLogs':
+                return val === '0' ? 'Yes' : val === '1' ? 'No' : val;
+
+            default:
+                return rawValue;
+        }
+    }
+
+    /**
      * Download filtered devices as a multi-sheet Excel file (.xlsx).
      * Each device type gets its own sheet with device info + its specific parameters.
      */
@@ -1358,7 +1405,7 @@ geotab.addin.digitalMatterDeviceManager = function () {
                 ];
 
                 const paramValues = paramKeys.map(key =>
-                    flatParams[key] !== undefined ? flatParams[key] : 'N/A'
+                    getParamDisplayValue(key, flatParams[key], deviceType)
                 );
 
                 return [...baseRow, ...paramValues];

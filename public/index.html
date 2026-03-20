@@ -11,23 +11,6 @@
 <body>
     <div id="digitalMatterDeviceManager" style="display:none;">
 
-        <!-- Toolbar -->
-        <div class="container-fluid">
-            <div class="d-flex justify-content-end align-items-center pt-3 pb-1">
-                <button class="btn btn-outline-secondary btn-loading" id="refreshDevicesBtn" onclick="refreshDevices()">
-                    <span class="btn-text" style="display:inline-flex;align-items:center;">
-                        <i class="fas fa-sync-alt me-2"></i>Refresh
-                    </span>
-                    <span class="btn-loading-text" style="display:none;">
-                        <span class="spinner-border spinner-border-sm me-1" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </span>
-                        Loading...
-                    </span>
-                </button>
-            </div>
-        </div>
-
         <!-- Controls Section -->
         <div class="container-fluid">
             <div class="controls-section">
@@ -45,7 +28,20 @@
                         </div>
                     </div>
                     <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                        <div class="device-count" id="deviceCount">Loading devices...</div>
+                        <div class="d-flex align-items-center justify-content-md-end gap-3">
+                            <div class="device-count" id="deviceCount">Loading devices...</div>
+                            <button class="btn btn-outline-secondary btn-loading" id="refreshDevicesBtn" onclick="refreshDevices()">
+                                <span class="btn-text" style="display:inline-flex;align-items:center;">
+                                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                                </span>
+                                <span class="btn-loading-text" style="display:none;">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                    Loading...
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
